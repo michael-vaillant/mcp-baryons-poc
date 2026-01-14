@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17822308.svg)](https://doi.org/10.5281/zenodo.17822308)
 [![Status](https://img.shields.io/badge/Status-Proof%20of%20Concept-blue)]()
-[![Open interactive companion](https://img.shields.io/badge/Open-interactive%20companion-blue)](https://<owner>.github.io/<repo>/)
+[![Open Online Demo](https://img.shields.io/badge/Open-interactive%20companion-blue)]([https://<owner>.github.io/<repo>](https://michael-vaillant.github.io/mcp-baryons-poc/)
 
 **Interactive HTML companion for Meta-Connective Physics (MCP) Appendix E.**
 
