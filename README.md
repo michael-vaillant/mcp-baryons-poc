@@ -3,7 +3,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17822308.svg)](https://doi.org/10.5281/zenodo.17822308)
 [![Status](https://img.shields.io/badge/Status-Proof%20of%20Concept-blue)]()
-[![HAL Open Science](https://hal.science/hal-05452764)]()
 
 **Interactive HTML companion for Meta-Connective Physics (MCP) Appendix E.**
 
