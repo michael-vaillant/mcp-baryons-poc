@@ -1,0 +1,3435 @@
+<!doctype html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <title>MCP – Quarks/Baryons (Core Mode Ab Initio)</title>
+    <style>
+        :root {
+            /* --- Night mode (default) --- */
+            --bg-color: #0b0c10;
+            --text-color: #d7dde8;
+            --panel-bg: rgba(0, 0, 0, .75);
+            --panel-border: rgba(255, 255, 255, .15);
+            --header-text: #fff;
+            --input-bg: #141826;
+            --input-text: #fff;
+            --input-border: #556;
+            --label-color: #aab;
+            --val-color: #fff;
+            --btn-bg: #1b2233;
+            --btn-hover: #232c44;
+            --box-bg: rgba(255, 255, 255, .05);
+            --pill-border: rgba(255, 255, 255, .18);
+            --pill-text: #cdd;
+            /* Scan */
+            --scan-bg: #0e1016;
+            --scan-grid: rgba(255, 255, 255, 0.08);
+            --scan-axis: rgba(255, 255, 255, 0.22);
+            --scan-text: rgba(255, 255, 255, 0.75);
+            /* Borders */
+            --danger-border: #f44;
+            --warn-border: #fe4;
+            --info-border: #44f;
+            --core-color: #d8f;
+            /* Core mode */
+            --core-border: #a6d;
+        }
+
+        body.day-mode {
+            /* --- Day mode --- */
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --panel-bg: rgba(245, 245, 245, .90);
+            --panel-border: #cccccc;
+            --header-text: #000;
+            --input-bg: #ffffff;
+            --input-text: #000;
+            --input-border: #aaa;
+            --label-color: #444;
+            --val-color: #000;
+            --btn-bg: #e0e0e0;
+            --btn-hover: #d0d0d0;
+            --box-bg: rgba(0, 0, 0, .05);
+            --pill-border: #888;
+            --pill-text: #333;
+
+            --scan-bg: #fdfdfd;
+            --scan-grid: rgba(0, 0, 0, 0.1);
+            --scan-axis: rgba(0, 0, 0, 0.3);
+            --scan-text: #000;
+        }
+
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: var(--bg-color);
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            color: var(--text-color);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* ----- Panels ----- */
+        .panel {
+            position: absolute;
+            z-index: 10;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 12px;
+            backdrop-filter: blur(4px);
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .panelHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .panelTitle {
+            margin: 0;
+            font-size: 13px;
+            color: var(--header-text);
+            font-weight: bold;
+        }
+
+        .collapseBtn {
+            width: 26px;
+            height: 22px;
+            border-radius: 6px;
+            border: 1px solid var(--panel-border);
+            background: rgba(128, 128, 128, .15);
+            color: var(--text-color);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .collapseBtn:hover {
+            background: rgba(128, 128, 128, .25);
+        }
+
+        .panelBody {
+            display: block;
+        }
+
+        .panel.collapsed .panelBody {
+            display: none;
+        }
+
+        #uiPanel {
+            right: 12px;
+            top: 12px;
+            width: 470px;
+        }
+
+        #legendPanel {
+            left: 12px;
+            width: 467px;
+            max-width: calc(100vw - 520px);
+        }
+
+        #resultsPanel {
+            top: 12px;
+            left: 12px;
+            width: 467px;
+            max-width: calc(100vw - 520px);
+        }
+
+        #scanPanel {
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            width: 500px
+        }
+
+        #scanPanel .panelBody {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 4px;
+            color: var(--label-color);
+            font-size: 11px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        input[type="range"]:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 6px;
+            border-radius: 6px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        input:disabled,
+        select:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .val {
+            float: right;
+            color: var(--val-color);
+            font-weight: bold;
+        }
+
+        .box {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--box-bg);
+            border-left: 3px solid var(--info-border);
+            color: var(--text-color);
+        }
+
+        .box.core-active {
+            border-left-color: var(--core-border);
+            background: rgba(180, 100, 255, 0.07);
+        }
+
+        .box.warn {
+            border-left-color: var(--warn-border);
+        }
+
+        .box.danger {
+            border-left-color: var(--danger-border);
+        }
+
+        .big {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--header-text);
+            display: block;
+            margin: 4px 0;
+        }
+
+        .sub {
+            font-size: 10px;
+            color: var(--label-color);
+            line-height: 1.35;
+        }
+
+        .btnRow {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button.actionBtn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--btn-bg);
+            color: var(--input-text);
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button.actionBtn:hover {
+            background: var(--btn-hover);
+        }
+
+        .mono {
+            white-space: pre;
+        }
+
+        .chkline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            color: var(--text-color);
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid var(--pill-border);
+            border-radius: 999px;
+            color: var(--pill-text);
+        }
+
+        #scanCanvas {
+            width: 100%;
+            height: 240px;
+            display: block;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: var(--scan-bg);
+            flex-shrink: 0;
+        }
+
+        #scanBest {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--box-bg);
+            border: 1px solid var(--panel-border);
+            color: var(--text-color);
+            border-radius: 8px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            white-space: pre;
+            font-size: 10px;
+            flex: 1;
+            overflow-y: auto;
+            max-height: none;
+            min-height: 40px;
+        }
+
+        .core-text {
+            color: var(--core-color);
+            font-weight: bold;
+        }
+    </style>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+
+<body>
+
+    <div id="resultsPanel" class="panel">
+        <div class="panelHeader">
+            <div class="panelTitle">Results</div>
+            <button class="collapseBtn" data-target="resultsPanel">−</button>
+        </div>
+        <div class="panelBody">
+            <div id="in" class="box" style="margin-bottom:8px; padding:5px;"></div>
+            <div id="out" class="box"></div>
+        </div>
+    </div>
+
+    <div id="legendPanel" class="panel">
+        <div class="panelHeader">
+            <div class="panelTitle">Legend</div>
+            <button class="collapseBtn" data-target="legendPanel">−</button>
+        </div>
+        <div class="panelBody">
+            <div id="legendContent"></div>
+        </div>
+    </div>
+
+    <div id="scanPanel" class="panel">
+        <div class="panelHeader">
+            <div class="panelTitle">Target & Snap Analysis</div>
+            <button class="collapseBtn" data-target="scanPanel">−</button>
+        </div>
+        <div class="panelBody">
+            <div class="chkline" style="margin-bottom:8px; justify-content: space-between;">
+                <div style="display:flex; gap:10px;">
+                    <label style="margin:0;display:flex;align-items:center;gap:4px;">
+                        <input id="showEpsN" type="checkbox" checked />
+                        <span id="scanLblA" class="pill" style="border-color:#48f; color:#48f;">εN (Grid)</span>
+                    </label>
+                    <label style="margin:0;display:flex;align-items:center;gap:4px;">
+                        <input id="showEpsK" type="checkbox" checked />
+                        <span id="scanLblB" class="pill" style="border-color:#fa4; color:#fa4;">εk (Spin)</span>
+                    </label>
+                </div>
+                <label style="margin:0;display:flex;align-items:center;gap:4px;">
+                    <input id="showMassErr" type="checkbox" checked />
+                    <span class="pill" style="border-color:#ffd700; color:#ffd700;">Mass Err (Theor)</span>
+                </label>
+            </div>
+            <canvas id="scanCanvas"></canvas>
+            <div id="scanBest">Click “SCAN n” to run Target & Snap.</div>
+        </div>
+    </div>
+
+    <div id="uiPanel" class="panel">
+        <div class="panelHeader">
+            <div class="panelTitle">MCP Quarks/Baryons</div>
+            <button class="collapseBtn" data-target="uiPanel">−</button>
+        </div>
+
+        <div class="panelBody">
+            <div class="row">
+                <div>
+                    <label>Objet (preset table)</label>
+                    <select id="entity">
+                        <option value="e">Électron (e−)</option>
+                        <option value="mu">Muon (μ−)</option>
+                        <option value="tau">Tau (τ−)</option>
+                        <option value="u">Quark up (u)</option>
+                        <option value="c">Quark charm (c)</option>
+                        <option value="t">Quark top (t)</option>
+                        <option value="d">Quark down (d)</option>
+                        <option value="s">Quark strange (s)</option>
+                        <option value="b">Quark bottom (b)</option>
+                        <option value="p">Proton (uud)</option>
+                        <option value="n">Neutron (udd)</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+                <div>
+                    <label>η mode</label>
+                    <select id="etaMode">
+                        <option value="calib_me">Calibrate η on e− (Compton)</option>
+                        <option value="calib_cosmo">Calibrate η on T_univ (Cosmo)</option>
+                        <option value="fix_eta">Fix η (manual)</option>
+                        <option value="fix_Ne">Fix Nloop_e (legacy)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div
+                style="margin-top:10px; background:var(--box-bg); padding:8px; border-radius:6px; border:1px solid var(--panel-border);">
+                <div class="row" style="align-items: center; margin-bottom: 5px;">
+                    <div class="chkline" style="margin-top:0;">
+                        <input id="coreMode" type="checkbox" />
+                        <label for="coreMode" style="margin:0; font-weight:bold; color:var(--core-color);">Core Mode (Ab
+                            Initio)</label>
+                    </div>
+                    <div>
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            <label style="margin:0; color:var(--label-color);">Θ<sub>struct</sub></label>
+                            <input id="thetaStruct" type="number" step="0.000001" value="0.3589887297"
+                                style="padding:4px;" disabled />
+                        </div>
+                    </div>
+                </div>
+                <div class="sub">
+                    Enables theoretical prediction of n using (π, α, Θ). Locks sectors rules.
+                </div>
+            </div>
+
+            <div id="customBox" style="display:none; margin-top:10px;">
+                <div class="row">
+                    <div>
+                        <label>D2 (template integer)</label>
+                        <input id="cd2" type="number" min="0" step="1" value="3" />
+                    </div>
+                    <div>
+                        <label>D13 = (d1+d3) template integer</label>
+                        <input id="cd13" type="number" min="0" step="1" value="6" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label>Observed charge Q</label>
+                        <input id="cQ" type="number" step="0.01" value="-1" />
+                    </div>
+                    <div>
+                        <label>Family (1,2,3)</label>
+                        <input id="cfam" type="number" min="1" max="3" step="1" value="1" />
+                    </div>
+                </div>
+                <label>Target mass (MeV) (optional)</label>
+                <input id="cMeV" type="number" step="0.001" value="0.511" />
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>Harmonic divisor n</label>
+                    <input id="harmN" type="number" min="1" step="1" value="1" />
+                    <div id="harmNDisplay" class="val" style="display:none; color:var(--core-color);"></div>
+                </div>
+                <div>
+                    <label>Fit target (MeV)</label>
+                    <input id="fitMeV" type="number" step="0.001" value="" />
+                </div>
+            </div>
+
+            <div
+                style="margin-top:10px;background:var(--box-bg);padding:8px;border-radius:6px;border:1px solid var(--panel-border);">
+                <div class="chkline">
+                    <input id="lockEta" type="checkbox" checked />
+                    <div>
+                        <div style="color:var(--header-text);font-weight:bold;">Lock η after calibration</div>
+                        <div class="sub">If enabled: η is calibrated once on e− and then frozen.</div>
+                    </div>
+                </div>
+                <div style="margin-top:6px;font-size:10px;color:var(--label-color);">
+                    current η : <span id="etaValTxt" style="color:#2b2;"></span> RTQ/rad
+                    <span id="etaLockTag" class="pill" style="display:none;margin-left:6px;">LOCK</span>
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label>η (RTQ/rad)</label>
+                    <input id="etaVal" type="text" value="2.147511e20" inputmode="decimal" disabled />
+                </div>
+                <div>
+                    <label>Nloop_e (legacy)</label>
+                    <input id="NloopE" type="text" value="4.77e21" inputmode="decimal" />
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+                <div>
+                    <label>Line samples <span id="vPtsVal" class="val"></span></label>
+                    <input id="visPts" type="range" min="30" max="800" step="10" value="240" />
+                </div>
+                <div>
+                    <label>Max points (pixels) <span id="vMaxVal" class="val"></span></label>
+                    <input id="visMax" type="range" min="200" max="8000" step="100" value="1400" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="chkline">
+                    <input id="showLine" type="checkbox" checked />
+                    <label for="showLine" style="margin:0;color:var(--header-text);">Show loop (line)</label>
+                </div>
+                <div class="chkline">
+                    <input id="showPts" type="checkbox" checked />
+                    <label for="showPts" style="margin:0;color:var(--header-text);">Show RTQ (pixels)</label>
+                </div>
+            </div>
+
+            <div class="row" style="margin-top:12px;">
+                <div>
+                    <label>Shape r1 = A1/A2 <span id="r1Val" class="val"></span></label>
+                    <input id="r1" type="range" min="0.2" max="12.0" step="0.001" value="2.0" />
+                </div>
+                <div>
+                    <label>Shape r3 = A3/A2 <span id="r3Val" class="val"></span></label>
+                    <input id="r3" type="range" min="0.0" max="8.0" step="0.001" value="0.0" />
+                </div>
+            </div>
+
+            <div class="row" id="sectorControls">
+                <div>
+                    <label>w_d3 (d3 weight) <span id="wd3Val" class="val"></span></label>
+                    <input id="wd3" type="range" min="-1.0" max="5.0" step="0.001" value="0.0" />
+                </div>
+                <div>
+                    <label>tilt34 (d3→d4) <span id="tilt34Val" class="val"></span></label>
+                    <input id="tilt34" type="range" min="-8.0" max="8.0" step="0.001" value="0.0" />
+                </div>
+            </div>
+
+            <div
+                style="margin-top:10px;background:var(--box-bg);padding:8px;border-radius:6px;border:1px solid var(--panel-border);">
+                <div class="chkline">
+                    <input id="autoSector" type="checkbox" checked />
+                    <div>
+                        <div style="color:var(--header-text);font-weight:bold;">Auto sector rules (wd3, tilt, w_conf)
+                        </div>
+                        <div class="sub">
+                            Leptons: wd3=0, tilt=0. Up-type: wd3=3, tilt=0. Down-type: wd3=3, tilt=±2.
+                            Baryons: helixFactor averaged over constituents (u→0, d→2).
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chkline" style="margin-top:6px;">
+                    <input id="antiCPT" type="checkbox" />
+                    <div>
+                        <div style="color:var(--header-text);font-weight:bold;">CPT conjugate (flip holonomies sign)
+                        </div>
+                        <div class="sub">We flip (Δd1,Δd2,Δd3,Δd13) together → Φ_topo unchanged → mass unchanged.</div>
+                    </div>
+                </div>
+
+                <div class="chkline" style="margin-top:6px;">
+                    <input id="antiParticle" type="checkbox" />
+                    <div>
+                        <div style="color:var(--header-text);font-weight:bold;">Anti-particle (local map: Q→−Q,
+                            D13→D13+12Q)</div>
+                        <div class="sub">Preserves Δd3 (colour holonomy) when Q∈Z/3. Flips tilt sign (d4 orientation)
+                            without changing helixFactor.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="baryonBlock"
+                style="display:none;margin-top:10px;background:var(--box-bg);padding:8px;border-radius:6px;border:1px solid var(--panel-border);">
+                <div style="color:var(--header-text);font-weight:bold;margin-bottom:6px;">Baryon controls (Experimental)
+                </div>
+
+                <label>Baryon spacing <span id="spVal" class="val"></span></label>
+                <input id="spacing" type="range" min="0.000" max="14" step="0.001" value="5.2" />
+
+                <div class="row" style="margin-top:6px;">
+                    <div>
+                        <label>Baryons confinement (experimental)</label>
+                        <select id="confMode">
+                            <option value="off">OFF</option>
+                            <option value="y">Y-junction</option>
+                            <option value="tri">Triadic chords (sparse)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>w_conf (weight)</label>
+                        <input id="wch" type="number" step="0.001" value="0.00" />
+                    </div>
+                </div>
+
+                <label>Triadic density (tri mode) <span id="triVal" class="val"></span></label>
+                <input id="triSlices" type="range" min="6" max="1200" step="1" value="24" />
+            </div>
+
+            <div class="btnRow">
+                <button class="actionBtn" id="btnToggleTheme">Day/Night</button>
+                <button class="actionBtn" id="btnResetView">Reset view</button>
+            </div>
+            <div class="btnRow">
+                <button class="actionBtn" id="btnCalibLock">Calibrate & lock η</button>
+                <button class="actionBtn" id="btnFitN">Auto-fit n</button>
+                <button class="actionBtn" id="btnScanSpectrum"
+                    style="background:#5a3b75; border:1px solid #b7f; color:#fff;">Scan n</button>
+
+                <button class="actionBtn" id="btnScanR3"
+                    style="background:#2f6a4f; border:1px solid #7fdcb0; color:#fff;">Scan r3</button>
+
+                <button class="actionBtn" id="btnScanR1"
+                    style="background:#6a4f2f; border:1px solid #dcb07f; color:#fff;">Scan r1</button>
+
+                <button class="actionBtn" id="btnMapA" style="background:#3b556d; border:1px solid #9bd; color:#fff;">
+                    Map A
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import * as THREE from "three";
+        import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+
+        // =============================================================
+        // 1. CONSTANTS & DATA
+        // =============================================================
+        const CONSTANTS = {
+            c: 299792458,               // m/s
+            M_PLANCK: 2.176434e-8,      // kg
+            l_p: 1.61626e-35,           // m
+            t_p: 5.391247e-44,          // s
+            l_0: 8.1027e-35,            // m (RTQ grain)
+            t_0: 2.70277e-43,           // s (l_0/c)
+            T_UNIV_S: 4.350846312e17,   // s
+            THETA_STRUCT: 0.35898873,   // rad
+            LAMBDA_C_E: 3.86159e-13,    // m (electron reduced Compton)
+            ALPHA: 1 / 137.035999,      // Fine-structure constant
+            SIN2_THETA_W: 0.23122,      // Weinberg angle (sin^2)
+            ALPHA_INV: 137.035999,
+            KG_PER_MEV: 1.78266192e-30,
+            MEV_PER_KG: 1.0 / 1.78266192e-30
+        };
+
+        const DELTA_SIGMA_TOTAL = 4 * Math.PI;
+        const A_BASE = (3 * Math.PI) / 2;
+        const CALIB_E_SHAPE = { A1: 2.0, A2: 1.0, A3: 0.0 };
+
+
+        // PDG 2024 anchors (MeV)
+        // https://pdglive.lbl.gov/DataBlock.action?node=Q123UM
+        // https://pdgaws.lbl.gov/2025/reviews/rpp2024-rev-quark-masses.pdf 
+        // https://indico.cern.ch/event/1291157/contributions/5896342/attachments/2896312/5078218/alusiani-hflav-tau-ichep24.pdf
+        const PDG = {
+            e: 0.51099895,
+            mu: 105.6583755,    // ± 0.0000023
+            tau: 1776.93,       // 1776.86 ± 0.12 (average of experiments)
+
+            u: 2.16,    // 2.20 ± 0.04
+            d: 4.70,    // 4.69 MeV ± 0.05
+            s: 93.5,    // 92.74 MeV ± 0.54
+
+            c: 1270.0, // 1.275 GeV ± 0.009
+            b: 4180.0, // 4.196 MeV ± 0.012
+            t: 172700.0,
+
+            p: 938.2720813,
+            n: 939.5654133
+
+            // Complete:
+            // Λ0: 1115.683 ± 0.006 MeV
+            // Σ+: 1189.37 ± 0.07 MeV
+            // Σ0: 1192.642 ± 0.024 MeV 
+            // Σ-: 1197.449 ± 0.030 MeV 
+            // Ξ^0: 1314.86 ± 0.07 MeV 
+            // Ξ^-: 1321.71 ± 0.06 MeV 
+            // Ω-: 1672.45 ± 0.29 MeV 
+
+        };
+
+        const PRESET = {
+            e: { name: "Electron", D2: 3, D13: 6, Q: -1, fam: 1, comp: null, n0: 1 },
+            mu: { name: "Muon", D2: 3, D13: 6, Q: -1, fam: 2, comp: null, n0: 207 },
+            tau: { name: "Tau", D2: 3, D13: 6, Q: -1, fam: 3, comp: null, n0: 3477 },
+
+            u: { name: "Quark u", D2: 6, D13: 12, Q: 2 / 3, fam: 1, comp: null },
+            c: { name: "Quark c", D2: 6, D13: 12, Q: 2 / 3, fam: 2, comp: null },
+            t: { name: "Quark t", D2: 6, D13: 12, Q: 2 / 3, fam: 3, comp: null },
+
+            d: { name: "Quark d", D2: 9, D13: 18, Q: -1 / 3, fam: 1, comp: null },
+            s: { name: "Quark s", D2: 9, D13: 18, Q: -1 / 3, fam: 2, comp: null },
+            b: { name: "Quark b", D2: 9, D13: 18, Q: -1 / 3, fam: 3, comp: null },
+
+            p: { name: "Proton", D2: 21, D13: 42, Q: 1, fam: 1, comp: ["u", "u", "d"] },
+            n: { name: "Neutron", D2: 24, D13: 48, Q: 0, fam: 1, comp: ["u", "d", "d"] }
+
+
+        };
+
+        // =============================================================
+        // 2. THREE.JS INITIALIZATION
+        // =============================================================
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x0b0c10, 20, 120);
+
+        const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 2500);
+        camera.position.set(12, 12, 18);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(innerWidth, innerHeight);
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        const dl = new THREE.DirectionalLight(0xffffff, 1.0);
+        dl.position.set(6, 10, 7);
+        scene.add(dl);
+
+        // Initial Grid
+        let grid = new THREE.GridHelper(60, 60, 0x1f2b3a, 0x11141a);
+        grid.position.y = -6;
+        scene.add(grid);
+
+        // Group for loops
+        let group = new THREE.Group();
+        scene.add(group);
+
+        // Store axis objects to update colors dynamically
+        const axesHelperObjects = [];
+
+        function createTextTexture(text, colorHex) {
+            const cvs = document.createElement("canvas");
+            cvs.width = 64; cvs.height = 32;
+            const ctx = cvs.getContext("2d");
+
+            ctx.fillStyle = "#" + new THREE.Color(colorHex).getHexString();
+
+            ctx.font = "bold 12px monospace";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, 0, 16);
+
+            const tex = new THREE.CanvasTexture(cvs);
+            return tex;
+        }
+
+        function addAxis(color, len, label, vec) {
+            const g = new THREE.Group();
+
+            // Line
+            const lineMat = new THREE.LineBasicMaterial({ color });
+            const line = new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), vec.clone().multiplyScalar(len)]),
+                lineMat
+            );
+            g.add(line);
+
+            // Sprite (Text)
+            const map = createTextTexture(label, color);
+            const spriteMat = new THREE.SpriteMaterial({ map: map, transparent: true });
+            const spr = new THREE.Sprite(spriteMat);
+            spr.position.copy(vec.clone().multiplyScalar(len * 1.05)); // slightly closer
+            spr.scale.set(1.5, 0.75, 1);
+            g.add(spr);
+
+            scene.add(g);
+
+            // Keep reference for theming
+            axesHelperObjects.push({
+                lineMat: lineMat,
+                spriteMat: spriteMat,
+                originalColor: color,
+                label: label
+            });
+        }
+
+        addAxis(0xffff00, 6, "d1", new THREE.Vector3(1, 0, 0));
+        addAxis(0x0000ff, 6, "d2", new THREE.Vector3(0, 1, 0));
+        addAxis(0xff0000, 6, "d3", new THREE.Vector3(0, 0, 1));
+
+        function clearGroup() {
+            scene.remove(group);
+            group.traverse(o => {
+                if (o.geometry) o.geometry.dispose();
+                if (o.material) o.material.dispose?.();
+            });
+            group = new THREE.Group();
+            scene.add(group);
+        }
+
+        // =============================================================
+        // 3. UI BINDINGS
+        // =============================================================
+        const el = {
+            legendContent: document.getElementById("legendContent"),
+            in: document.getElementById("in"),
+            out: document.getElementById("out"),
+            entity: document.getElementById("entity"),
+            customBox: document.getElementById("customBox"),
+            cd2: document.getElementById("cd2"),
+            cd13: document.getElementById("cd13"),
+            cQ: document.getElementById("cQ"),
+            cfam: document.getElementById("cfam"),
+            cMeV: document.getElementById("cMeV"),
+            etaMode: document.getElementById("etaMode"),
+            lockEta: document.getElementById("lockEta"),
+            etaVal: document.getElementById("etaVal"),
+            etaValTxt: document.getElementById("etaValTxt"),
+            etaLockTag: document.getElementById("etaLockTag"),
+            NloopE: document.getElementById("NloopE"),
+            harmN: document.getElementById("harmN"),
+            harmNDisplay: document.getElementById("harmNDisplay"), // New display val
+            visPts: document.getElementById("visPts"),
+            visMax: document.getElementById("visMax"),
+            vPtsVal: document.getElementById("vPtsVal"),
+            vMaxVal: document.getElementById("vMaxVal"),
+            showLine: document.getElementById("showLine"),
+            showPts: document.getElementById("showPts"),
+            baryonBlock: document.getElementById("baryonBlock"),
+            spacing: document.getElementById("spacing"),
+            spVal: document.getElementById("spVal"),
+            confMode: document.getElementById("confMode"),
+            triSlices: document.getElementById("triSlices"),
+            triVal: document.getElementById("triVal"),
+            wch: document.getElementById("wch"),
+            r1: document.getElementById("r1"),
+            r1Val: document.getElementById("r1Val"),
+            r3: document.getElementById("r3"),
+            r3Val: document.getElementById("r3Val"),
+            wd3: document.getElementById("wd3"),
+            wd3Val: document.getElementById("wd3Val"),
+            fitMeV: document.getElementById("fitMeV"),
+            btnCalibLock: document.getElementById("btnCalibLock"),
+            btnFitN: document.getElementById("btnFitN"),
+            btnResetView: document.getElementById("btnResetView"),
+            btnScanSpectrum: document.getElementById("btnScanSpectrum"),
+            btnToggleTheme: document.getElementById("btnToggleTheme"),
+            autoSector: document.getElementById("autoSector"),
+            coreMode: document.getElementById("coreMode"), // NEW
+            thetaStruct: document.getElementById("thetaStruct"), // NEW
+            antiCPT: document.getElementById("antiCPT"),
+            antiParticle: document.getElementById("antiParticle"),
+            tilt34: document.getElementById("tilt34"),
+            tilt34Val: document.getElementById("tilt34Val"),
+            scanPanel: document.getElementById("scanPanel"),
+            scanCanvas: document.getElementById("scanCanvas"),
+            scanBest: document.getElementById("scanBest"),
+            showEpsN: document.getElementById("showEpsN"),
+            showEpsK: document.getElementById("showEpsK"),
+            showMassErr: document.getElementById("showMassErr"),
+            btnScanR3: document.getElementById("btnScanR3"),
+            btnScanR1: document.getElementById("btnScanR1"), // NEW
+            scanLblA: document.getElementById("scanLblA"),
+            scanLblB: document.getElementById("scanLblB"),
+            btnMapA: document.getElementById("btnMapA"),
+        };
+
+        // =============================================================
+        // 4. THEME MANAGEMENT
+        // =============================================================
+        let isDayMode = false;
+
+        function updateTheme() {
+            document.body.classList.toggle("day-mode", isDayMode);
+
+            const bgColor = isDayMode ? 0xffffff : 0x0b0c10;
+            scene.fog.color.setHex(bgColor);
+            renderer.setClearColor(bgColor);
+
+            // Grid Update
+            scene.remove(grid);
+            const gridColor = isDayMode ? 0x000000 : 0x1f2b3a;
+            const subGridColor = isDayMode ? 0xcccccc : 0x11141a;
+            grid = new THREE.GridHelper(60, 60, gridColor, subGridColor);
+            grid.position.y = -6;
+            grid.material.transparent = true;
+            grid.material.opacity = isDayMode ? 0.3 : 1.0;
+            scene.add(grid);
+
+            // Axes Update (Black in day mode, Colored in night mode)
+            axesHelperObjects.forEach(axisObj => {
+                const targetColor = isDayMode ? 0x000000 : axisObj.originalColor;
+
+                // Update line color
+                axisObj.lineMat.color.setHex(targetColor);
+
+                // Update text sprite
+                // To change text color, we must regenerate the texture
+                if (axisObj.spriteMat.map) axisObj.spriteMat.map.dispose();
+                axisObj.spriteMat.map = createTextTexture(axisObj.label, targetColor);
+            });
+
+            updateAll(); // Update loops colors
+
+            if (lastScanData && !el.scanPanel.classList.contains("collapsed")) {
+                drawLastScan();
+            }
+        }
+
+        el.btnToggleTheme.addEventListener("click", () => {
+            isDayMode = !isDayMode;
+            updateTheme();
+        });
+
+        // -----------------------------
+        // Auto-sector logic
+        // -----------------------------
+        const autoOverride = { wd3: false, tilt34: false, wch: false };
+
+        function resetAutoOverrides() {
+            autoOverride.wd3 = false;
+            autoOverride.tilt34 = false;
+            autoOverride.wch = false;
+        }
+
+        el.wd3.addEventListener("input", () => { if (el.autoSector.checked) autoOverride.wd3 = true; });
+        el.tilt34.addEventListener("input", () => { if (el.autoSector.checked) autoOverride.tilt34 = true; });
+        el.wch.addEventListener("input", () => { if (el.autoSector.checked) autoOverride.wch = true; });
+
+        // -----------------------------
+        // CORE LOGIC: Ab Initio Calculation
+        // -----------------------------
+
+        function calculateCoreHarmonics(theta) {
+            const PI = Math.PI;
+            const E = Math.E;
+            const THETA = theta; // Input user (ex: 0.358989)
+
+            // A12 
+            const A12_geom = (3 * PI) / 2;
+
+            // A23 :  2->3 (Alpha^-1 / sqrt(pi))
+            const A23 = Math.log(CONSTANTS.ALPHA_INV / Math.sqrt(PI));
+
+            // LEPTONS (projective mode)
+            const n_e = 1;
+
+            // Muon 
+            const n_mu = Math.round(Math.exp(A12_geom * (1 + THETA ** 2))); // ~205
+
+            // Tau
+            const jump_mu_tau = Math.pow(CONSTANTS.ALPHA_INV, Math.log(Math.sqrt(PI)));
+            const n_tau = Math.round(n_mu * jump_mu_tau); // ~3430
+
+            // QUARKS 
+            // Gen 1
+            const n_u = 1;
+            const n_d = 1;
+
+            // Gen 2 
+            const val_u2 = E * (PI / 2) * CONSTANTS.ALPHA_INV;
+            const n_c = Math.round(val_u2);
+
+            // Strange (d2)
+            // ln(d2) = ln(u2) * (1-Theta)/(1+Theta)
+            const val_d2 = Math.exp(Math.log(val_u2) * (1 - THETA) / (1 + THETA));
+            const n_s = Math.round(val_d2); // ~20
+
+            // Gen 3 
+            const jump_23_u = Math.exp(A23 * (1 + THETA ** 2));
+            const jump_23_d = Math.exp(A23 * (1 - THETA ** 2));
+
+            const n_t = Math.round(n_c * jump_23_u); // ~79541
+            const n_b = Math.round(n_s * jump_23_d); // ~880
+
+            return {
+                e: n_e, mu: n_mu, tau: n_tau,
+                u: n_u, c: n_c, t: n_t,
+                d: n_d, s: n_s, b: n_b
+            };
+        }
+
+        // -----------------------------
+        // Panel collapse & Positioning Logic
+        // -----------------------------
+
+        function positionLegendPanel() {
+            const results = document.getElementById("resultsPanel");
+            const rect = results.getBoundingClientRect();
+            const top = Math.round(rect.top + rect.height + 12);
+            document.getElementById("legendPanel").style.top = top + "px";
+        }
+
+        function positionScanPanel() {
+            const legend = document.getElementById("legendPanel");
+            const scan = document.getElementById("scanPanel");
+            const rect = legend.getBoundingClientRect();
+
+            const top = Math.round(rect.top + rect.height + 12);
+
+            const marginBottom = 12;
+
+            const availableHeight = window.innerHeight - top - marginBottom;
+
+            scan.style.top = top + "px";
+
+            if (!scan.classList.contains("collapsed")) {
+                scan.style.maxHeight = Math.max(100, availableHeight) + "px";
+            } else {
+                scan.style.maxHeight = "none";
+            }
+        }
+
+        function positionLeftPanels() {
+            positionLegendPanel(); 
+            positionScanPanel();   
+        }
+
+        function togglePanel(id, btn) {
+            const p = document.getElementById(id);
+            p.classList.toggle("collapsed");
+            btn.textContent = p.classList.contains("collapsed") ? "+" : "−";
+
+            // Recalculer toutes les positions car la hauteur d'un panneau a changé
+            positionLeftPanels();
+
+            if (lastScanData && !document.getElementById("scanPanel").classList.contains("collapsed")) {
+                drawLastScan();
+            }
+        }
+        document.querySelectorAll(".collapseBtn").forEach(b => {
+            b.addEventListener("click", () => togglePanel(b.dataset.target, b));
+        });
+
+        // =============================================================
+        // 5. MCP HOLONOMY LOGIC
+        // =============================================================
+        function holonomyFromTemplate(D2, D13, Qobs, deltaSigmaTotal) {
+            const deltaD13 = -Math.PI * D13;
+            const deltaD1 = 6 * Math.PI * Qobs;
+            const deltaD3 = deltaD13 - deltaD1;
+            const deltaD2 = deltaSigmaTotal;
+            return { deltaD1, deltaD2, deltaD3, deltaD13 };
+        }
+
+        function phiTopo(deltaD1, deltaD2, deltaD3) {
+            return Math.sqrt(deltaD1 * deltaD1 + deltaD2 * deltaD2 + deltaD3 * deltaD3);
+        }
+
+        function applyLocalAntiparticleMap(params) {
+            const Q0 = params.Q;
+            const d13 = params.D13;
+            const shift = 12 * Q0;
+            const shiftInt = Math.round(shift);
+            const ok = Math.abs(shift - shiftInt) < 1e-9;
+            if (!ok) {
+                return {
+                    ok: false,
+                    msg: `Local antiparticle map disabled: 12Q is not integer (12Q=${shift}).`,
+                    Q: Q0, D13: d13
+                };
+            }
+            return {
+                ok: true,
+                msg: `Applied local antiparticle map: Q→${(-Q0)} ; D13→${(d13 + shiftInt)} (shift=${shiftInt}).`,
+                Q: -Q0, D13: d13 + shiftInt
+            };
+        }
+
+        function computeDeltas(specLike, opts) {
+            const antiLocal = !!opts?.antiParticleLocal;
+            const cptSign = !!opts?.antiCPT ? -1 : 1;
+            let Qeff = specLike.Q;
+            let d13eff = specLike.D13;
+            let localInfo = { ok: true, msg: "Local antiparticle map: OFF." };
+
+            if (antiLocal) {
+                localInfo = applyLocalAntiparticleMap({ Q: Qeff, D13: d13eff });
+                Qeff = localInfo.Q;
+                d13eff = localInfo.D13;
+            }
+            const H = holonomyFromTemplate(specLike.D2, d13eff, Qeff, DELTA_SIGMA_TOTAL);
+            H.deltaD1 *= cptSign;
+            H.deltaD2 *= cptSign;
+            H.deltaD3 *= cptSign;
+            H.deltaD13 *= cptSign;
+            return { H, Qeff, d13eff, cptSign, antiLocal, localInfo };
+        }
+
+        // =============================================================
+        // 6. VISUAL BUILDERS
+        // =============================================================
+        function buildLoop({ center, D2, samplesPerUnitPhys, samplesPerUnitVis, maxPix, deltaD1, deltaD2, deltaD3, A1, A2, A3, baseColor, phaseOffset = 0 }) {
+            const units = Math.max(1, D2 | 0);
+            const N_phys = units * Math.max(200, samplesPerUnitPhys | 0);
+            const d1_step = deltaD1 / N_phys;
+            const d2_step = deltaD2 / N_phys;
+            const d3_step = deltaD3 / N_phys;
+
+            let phi1 = 0, phi2 = 0, phi3 = 0;
+            const pts = new Array(N_phys);
+            const cols = new Float32Array(N_phys * 3);
+            const c = baseColor ?? new THREE.Color(0xffffff);
+
+            for (let i = 0; i < N_phys; i++) {
+                phi1 += d1_step; phi2 += d2_step; phi3 += d3_step;
+                const p1 = phi1 + phaseOffset;
+                const p2 = phi2 + phaseOffset; // ou seulement sur p1/p3 selon le modèle
+                const p3 = phi3 + phaseOffset;
+
+                const X = center.x + A1 * Math.cos(p1) + A3 * Math.cos(p3);
+                const Y = center.y + A2 * Math.sin(p2);
+                const Z = center.z + A1 * Math.sin(p1) + A2 * Math.cos(p2) + A3 * Math.sin(p3);
+                pts[i] = new THREE.Vector3(X, Y, Z);
+                cols[3 * i + 0] = c.r; cols[3 * i + 1] = c.g; cols[3 * i + 2] = c.b;
+            }
+
+            const stridePix = Math.max(1, Math.ceil(N_phys / Math.max(200, maxPix)));
+            const ptsPix = [];
+            const colsPix = [];
+            for (let i = 0; i < N_phys; i += stridePix) {
+                ptsPix.push(pts[i]);
+                colsPix.push(cols[3 * i], cols[3 * i + 1], cols[3 * i + 2]);
+            }
+
+            const samplesLine = Math.max(10, samplesPerUnitVis | 0);
+            const strideLine = Math.max(1, Math.floor(N_phys / samplesLine));
+            const ptsLine = [];
+            const colsLine = [];
+            for (let i = 0; i < N_phys; i += strideLine) {
+                ptsLine.push(pts[i]);
+                colsLine.push(cols[3 * i], cols[3 * i + 1], cols[3 * i + 2]);
+            }
+            return { pts, ptsPix, colsPix, ptsLine, colsLine };
+        }
+
+        function loopStartPoint(center, A1, A2, A3) {
+            return new THREE.Vector3(center.x + A1 + A3, center.y, center.z + A2);
+        }
+
+        function gammaProjection(pts, axis, startPoint = null) {
+            const N = pts.length;
+            if (N < 2 && !startPoint) return 0;
+            const seg = new THREE.Vector3();
+            let weighted = 0, total = 0;
+            let prev = startPoint ? startPoint : pts[0];
+            const i0 = startPoint ? 0 : 1;
+            for (let i = i0; i < N; i++) {
+                const next = pts[i];
+                seg.subVectors(next, prev);
+                const len = seg.length();
+                if (len > 1e-12) {
+                    const proj = Math.abs(seg.dot(axis)) / len;
+                    weighted += proj * len;
+                    total += len;
+                }
+                prev = next;
+            }
+            if (startPoint) {
+                seg.subVectors(startPoint, prev);
+                const len = seg.length();
+                if (len > 1e-12) {
+                    const proj = Math.abs(seg.dot(axis)) / len;
+                    weighted += proj * len;
+                    total += len;
+                }
+            }
+            return total > 0 ? weighted / total : 0;
+        }
+
+        function makeLine(pts, cols, opacity = 0.35) {
+            const g = new THREE.BufferGeometry().setFromPoints(pts);
+            g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+            const m = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity });
+            return new THREE.Line(g, m);
+        }
+
+        function makePts(pts, cols, opacity = 0.9) {
+            const g = new THREE.BufferGeometry().setFromPoints(pts);
+            g.setAttribute("color", new THREE.Float32BufferAttribute(cols, 3));
+            const m = new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, transparent: true, opacity });
+            return new THREE.Points(g, m);
+        }
+
+        // =============================================================
+        // 6. BARYON GEOMETRY HELPERS
+        // =============================================================
+        function solve3(A, b) {
+            const M = [
+                [A[0][0], A[0][1], A[0][2], b.x],
+                [A[1][0], A[1][1], A[1][2], b.y],
+                [A[2][0], A[2][1], A[2][2], b.z]
+            ];
+            for (let col = 0; col < 3; col++) {
+                let piv = col;
+                for (let r = col + 1; r < 3; r++) if (Math.abs(M[r][col]) > Math.abs(M[piv][col])) piv = r;
+                if (Math.abs(M[piv][col]) < 1e-12) return null;
+                if (piv !== col) { const tmp = M[piv]; M[piv] = M[col]; M[col] = tmp; }
+                const inv = 1 / M[col][col];
+                for (let c = col; c < 4; c++) M[col][c] *= inv;
+                for (let r = 0; r < 3; r++) {
+                    if (r === col) continue;
+                    const f = M[r][col];
+                    for (let c = col; c < 4; c++) M[r][c] -= f * M[col][c];
+                }
+            }
+            return new THREE.Vector3(M[0][3], M[1][3], M[2][3]);
+        }
+
+        function bestJunction(anchors, scaleZ) {
+            let best = null;
+            function scaleP(p) { return new THREE.Vector3(p.x, p.y, p.z * scaleZ); }
+            function unscaleP(p) { return new THREE.Vector3(p.x, p.y, p.z / scaleZ); }
+            for (let mask = 0; mask < 8; mask++) {
+                const f0 = (mask >> 0) & 1, f1 = (mask >> 1) & 1;
+                if (f0 !== f1) continue;
+                const P = [], d = [];
+                for (let i = 0; i < 3; i++) {
+                    const flip = (mask >> i) & 1;
+                    const Si = anchors[i].S, Ei = anchors[i].E;
+                    const Pi = flip ? Ei : Si;
+                    const Vi = flip ? Si.clone().sub(Ei) : Ei.clone().sub(Si);
+                    const Ps = scaleP(Pi);
+                    const Vs = scaleP(Vi);
+                    if (Vs.lengthSq() < 1e-18) { d.length = 0; break; }
+                    P.push(Ps); d.push(Vs.normalize());
+                }
+                if (d.length !== 3) continue;
+                let A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+                let b = new THREE.Vector3(0, 0, 0);
+                for (let i = 0; i < 3; i++) {
+                    const dx = d[i].x, dy = d[i].y, dz = d[i].z;
+                    const Mi = [
+                        [1 - dx * dx, -dx * dy, -dx * dz],
+                        [-dy * dx, 1 - dy * dy, -dy * dz],
+                        [-dz * dx, -dz * dy, 1 - dz * dz]
+                    ];
+                    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) A[r][c] += Mi[r][c];
+                    const Pi = P[i];
+                    b.x += Mi[0][0] * Pi.x + Mi[0][1] * Pi.y + Mi[0][2] * Pi.z;
+                    b.y += Mi[1][0] * Pi.x + Mi[1][1] * Pi.y + Mi[1][2] * Pi.z;
+                    b.z += Mi[2][0] * Pi.x + Mi[2][1] * Pi.y + Mi[2][2] * Pi.z;
+                }
+                const Js = solve3(A, b);
+                if (!Js) continue;
+                let cost = 0;
+                for (let i = 0; i < 3; i++) {
+                    const w = Js.clone().sub(P[i]);
+                    const t = d[i].dot(w);
+                    const proj = d[i].clone().multiplyScalar(t);
+                    const r = w.sub(proj);
+                    const delta = r.length();
+                    cost += delta * delta;
+                }
+                if (!best || cost < best.cost) best = { cost, mask, Js };
+            }
+            if (!best) return null;
+            const used = [];
+            for (let i = 0; i < 3; i++) {
+                const flip = (best.mask >> i) & 1;
+                used.push(flip ? anchors[i].E : anchors[i].S);
+            }
+            return { J: unscaleP(best.Js), used };
+        }
+
+        function makeJunctionLines(J, used, opacity = 0.85) {
+            const g = new THREE.Group();
+            const color = isDayMode ? 0x885522 : 0xc8a06a;
+            const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity });
+            mat.depthTest = false;
+            for (const P of used) {
+                g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([P, J]), mat));
+            }
+            const eps = 0.35;
+            const crossPts = [
+                new THREE.Vector3(J.x - eps, J.y, J.z), new THREE.Vector3(J.x + eps, J.y, J.z),
+                new THREE.Vector3(J.x, J.y - eps, J.z), new THREE.Vector3(J.x, J.y + eps, J.z),
+                new THREE.Vector3(J.x, J.y, J.z - eps), new THREE.Vector3(J.x, J.y, J.z + eps),
+            ];
+            const crossColor = isDayMode ? 0x000000 : 0xffffff;
+            g.add(new THREE.LineSegments(
+                new THREE.BufferGeometry().setFromPoints(crossPts),
+                new THREE.LineBasicMaterial({ color: crossColor, transparent: true, opacity: 0.9 })
+            ));
+            return g;
+        }
+        function buildTriadicSparse(A, B, C, slices) {
+            const chordPts = [];
+            if (!A || !B || !C || A.length === 0 || B.length === 0 || C.length === 0) {
+                return { chordPts, meanLen: 0 };
+            }
+
+            const K = Math.max(3, slices | 0);
+            let sum = 0, cnt = 0;
+
+            for (let k = 0; k < K; k++) {
+                const t = k / K;
+
+                const ia = Math.floor(t * A.length);
+                const ib = Math.floor(t * B.length);
+                const ic = Math.floor(t * C.length);
+
+                const a = A[ia % A.length];
+                const b = B[ib % B.length];
+                const c = C[ic % C.length];
+
+                chordPts.push(a, b);
+                chordPts.push(b, c);
+                chordPts.push(c, a);
+
+                sum += a.distanceTo(b) + b.distanceTo(c) + c.distanceTo(a);
+                cnt += 3;
+            }
+            return { chordPts, meanLen: (cnt > 0 ? sum / cnt : 0) };
+        }
+
+
+        function makeChords(chordPts, color = 0xffdd44, opacity = 0.25) {
+            const c = isDayMode ? 0xccaa00 : color;
+            const geo = new THREE.BufferGeometry().setFromPoints(chordPts);
+            const mat = new THREE.LineBasicMaterial({ color: c, transparent: true, opacity });
+            mat.depthTest = false;
+            return new THREE.LineSegments(geo, mat);
+        }
+
+        // =============================================================
+        // 7. MAIN LOGIC
+        // =============================================================
+        function colorForKey(k) {
+            if (isDayMode) {
+                return new THREE.Color(0.2, 0.2, 0.2);
+            }
+            if (k === "e" || k === "mu" || k === "tau") return new THREE.Color(0.20, 0.65, 1.00);
+            if (k === "u" || k === "c" || k === "t") return new THREE.Color(0.25, 1.0, 0.35);
+            if (k === "d" || k === "s" || k === "b") return new THREE.Color(1.0, 0.45, 0.45);
+            return new THREE.Color(0xffffff);
+        }
+
+        let etaLockedValue = null;
+        let legacyNloopEUser = Number.parseFloat(el.NloopE.value);
+        let lastEtaMode = el.etaMode.value;
+
+        function etaFromMode(gammaElectronForCalib) {
+            const mode = el.etaMode.value;
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            if (mode === "fix_eta") return Number.parseFloat(el.etaVal.value);
+            if (mode === "fix_Ne") {
+                const N_e_legacy = Number.parseFloat(el.NloopE.value);
+                const pe = PRESET.e;
+                const H = holonomyFromTemplate(pe.D2, pe.D13, pe.Q, DELTA_SIGMA_TOTAL);
+                const Phi_e = phiTopo(H.deltaD1, H.deltaD2, H.deltaD3);
+                return N_e_legacy / (Phi_e * cosTheta);
+            }
+            if (mode === "calib_cosmo") {
+                const N_cosmo = CONSTANTS.T_UNIV_S / CONSTANTS.t_p;
+                return Math.pow(N_cosmo, 1 / 3);
+            }
+            const pe = PRESET.e;
+            const H = holonomyFromTemplate(pe.D2, pe.D13, pe.Q, DELTA_SIGMA_TOTAL);
+            const Phi_e = phiTopo(H.deltaD1, H.deltaD2, H.deltaD3);
+            const m_e_kg = PDG.e * CONSTANTS.KG_PER_MEV;
+            const gE = (gammaElectronForCalib ?? 0.203625);
+            return (CONSTANTS.M_PLANCK * gE) / (m_e_kg * Phi_e * cosTheta);
+        }
+
+        function computeMass({ Phi, eta, nEff, gammaEff, cosTheta }) {
+            const Nloop = (eta * Phi * cosTheta) / Math.max(1e-12, nEff);
+            const m = CONSTANTS.M_PLANCK * (gammaEff / Math.max(1e-12, Nloop));
+            return { m, Nloop, gammaEff };
+        }
+
+        function targetMeVForEntity(key) {
+            if (key === "custom") return parseFloat(el.cMeV.value || "0");
+            return PDG[key] ?? 0;
+        }
+
+        function getSpec() {
+            const key = el.entity.value;
+            el.customBox.style.display = (key === "custom") ? "block" : "none";
+            if (key === "custom") {
+                return {
+                    key,
+                    name: "Custom",
+                    D2: parseInt(el.cd2.value || "0"),
+                    D13: parseInt(el.cd13.value || "0"),
+                    Q: parseFloat(el.cQ.value || "0"),
+                    fam: parseInt(el.cfam.value || "1"),
+                    comp: null
+                };
+            }
+            return { key, ...PRESET[key] };
+        }
+
+        let last = null;
+
+
+        function updateAll() {
+            // Main parameters
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+            const spec = getSpec();
+
+            // CORE MODE LOGIC 
+            const isCore = el.coreMode.checked;
+            el.in.classList.toggle("core-active", isCore);
+            el.out.classList.toggle("core-active", isCore);
+
+            el.thetaStruct.disabled = !isCore;
+            el.autoSector.disabled = isCore;
+            if (isCore) el.autoSector.checked = true;
+
+            // 2. n calculation (Harmonics)
+            let n_harm;
+            if (isCore && spec.key !== "custom") {
+                const thetaInput = parseFloat(el.thetaStruct.value);
+                const harmonics = calculateCoreHarmonics(thetaInput);
+
+                if (spec.comp) {
+                    let sumN = 0;
+                    spec.comp.forEach(k => sumN += harmonics[k]);
+                    n_harm = Math.round(sumN / spec.comp.length);
+                } else {
+                    n_harm = harmonics[spec.key] || 1;
+                }
+
+                // UI Locks
+                el.harmN.value = String(n_harm);
+                el.harmN.disabled = true;
+                el.harmNDisplay.style.display = "inline";
+                el.harmNDisplay.textContent = "(Ab Initio)";
+                el.wd3.disabled = true;
+                el.tilt34.disabled = true;
+            } else {
+                n_harm = Math.max(1, Math.round(parseFloat(el.harmN.value || "1")));
+                el.harmN.value = String(n_harm);
+                el.harmN.disabled = false;
+                el.harmNDisplay.style.display = "none";
+                el.wd3.disabled = false;
+                el.tilt34.disabled = false;
+            }
+
+            const isBaryon = !!spec.comp;
+            el.baryonBlock.style.display = isBaryon ? "block" : "none";
+
+            // UI mngt sliders Baryon
+            if (isBaryon && el.autoSector.checked) {
+                el.tilt34.disabled = true;
+                el.tilt34.title = "Auto-logic: Up=0, Down=2";
+            } else if (!isCore) {
+                el.tilt34.disabled = false;
+                el.tilt34.title = "";
+            }
+
+            // 3. Visual & geometrical parameters
+            const visPts = parseInt(el.visPts.value);
+            const visMax = parseInt(el.visMax.value);
+            el.vPtsVal.textContent = String(visPts);
+            el.vMaxVal.textContent = String(visMax);
+
+            const showLine = el.showLine.checked;
+            const showPts = el.showPts.checked;
+            el.visPts.disabled = !showLine;
+            el.spacing.disabled = !isBaryon;
+
+            const spacing = parseFloat(el.spacing.value);
+            el.spVal.textContent = spacing.toFixed(3);
+            const triSlices = parseInt(el.triSlices.value);
+            el.triVal.textContent = String(triSlices);
+
+            const A2 = 1.0;
+            const r1 = parseFloat(el.r1.value);
+            const r3 = parseFloat(el.r3.value);
+            el.r1Val.textContent = r1.toFixed(3);
+            el.r3Val.textContent = r3.toFixed(3);
+            const A1 = r1 * A2;
+            const A3 = r3 * A2;
+
+            const autoSector = el.autoSector.checked;
+            const antiLocal = el.antiParticle?.checked ? true : false;
+            const cptSign = el.antiCPT.checked ? -1 : 1;
+            const tiltSign = cptSign * (antiLocal ? -1 : 1);
+
+            // 4. Sector parameters
+            let wd3_used = parseFloat(el.wd3.value || "0");
+            let tilt34_used = parseFloat(el.tilt34.value || "0");
+            let wch_used = parseFloat(el.wch.value || "0");
+            let helixFactor = Math.sqrt(1.0 + tilt34_used * tilt34_used);
+
+            if (autoSector) {
+                const Qabs = Math.abs(spec.Q);
+                const isDownKey = (Qabs < 0.5);
+
+                if (!isBaryon) {
+                    const tiltVal = isDownKey ? 2.0 : 0.0;
+                    tilt34_used = (antiLocal || cptSign < 0) ? -tiltVal : tiltVal;
+                    helixFactor = Math.sqrt(1.0 + tilt34_used * tilt34_used);
+
+                    if (!isCore) el.tilt34.value = tilt34_used.toFixed(3);
+
+                    wd3_used = (spec.key.length === 1 && spec.key !== 'e' && spec.key !== 'mu' && spec.key !== 'tau') ? 3.0 : 0.0;
+                    if (!isCore) el.wd3.value = wd3_used.toFixed(3);
+                } else {
+                    wd3_used = 3.0;
+                    if (!isCore) el.wd3.value = "3.000";
+                }
+
+                if (!isBaryon && !autoOverride.wch) {
+                    wch_used = 0.0;
+                    el.wch.value = wch_used.toFixed(3);
+                }
+            } else {
+                wd3_used = parseFloat(el.wd3.value || "0");
+                tilt34_used = parseFloat(el.tilt34.value || "0");
+                helixFactor = Math.sqrt(1.0 + Math.abs(tilt34_used) * Math.abs(tilt34_used));
+                wch_used = parseFloat(el.wch.value || "0");
+            }
+
+            el.tilt34Val.textContent = tilt34_used.toFixed(3);
+            el.wd3Val.textContent = wd3_used.toFixed(3);
+
+            const projFactor = 1.0 / Math.max(1e-12, helixFactor);
+            const confMode = el.confMode.value;
+            const PHYS_SAMPLES = 2400;
+
+            const dObj = computeDeltas(spec, { antiParticleLocal: antiLocal, antiCPT: el.antiCPT.checked });
+            const Hobj = dObj.H;
+
+            const twoPi = 2 * Math.PI;
+            const cyc1 = Hobj.deltaD1 / twoPi;
+            const cyc2 = Hobj.deltaD2 / twoPi;
+            const cyc3 = Hobj.deltaD3 / twoPi;
+            const err13 = Math.abs((Hobj.deltaD1 + Hobj.deltaD3) - Hobj.deltaD13);
+            const cycErr = x => Math.abs(x - Math.round(x));
+            const Phi_obj = phiTopo(Hobj.deltaD1, Hobj.deltaD2, Hobj.deltaD3);
+
+            clearGroup();
+
+            const axis_d2 = new THREE.Vector3(0, 1, 0);
+            const axis_d3 = new THREE.Vector3(0, 0, 1);
+
+            let gamma_d2 = 0;
+            let avg_gamma_d3_phys = 0;
+            let E_conf = 0;
+
+            // 5. Geometrical calculation loop
+            if (!spec.comp) {
+                // SINGLE PARTICLE ---
+                const loop = buildLoop({
+                    center: new THREE.Vector3(0, 0, 0),
+                    D2: spec.D2,
+                    samplesPerUnitPhys: PHYS_SAMPLES,
+                    samplesPerUnitVis: visPts,
+                    maxPix: visMax,
+                    deltaD1: Hobj.deltaD1, deltaD2: Hobj.deltaD2, deltaD3: Hobj.deltaD3,
+                    A1, A2, A3,
+                    baseColor: colorForKey(spec.key)
+                });
+
+                const startP = loopStartPoint(new THREE.Vector3(0, 0, 0), A1, A2, A3);
+                gamma_d2 = gammaProjection(loop.pts, axis_d2, startP);
+                const gd3 = gammaProjection(loop.pts, axis_d3, startP);
+                avg_gamma_d3_phys = gd3 * helixFactor; // Global helix factor
+
+                if (showLine) group.add(makeLine(loop.ptsLine, loop.colsLine, 0.35));
+                if (showPts) group.add(makePts(loop.ptsPix, loop.colsPix, 0.9));
+
+            } else {
+                // BARYONS 
+                const D = spacing;
+                const h = Math.sqrt(3) / 2 * D;
+                const centers = [
+                    new THREE.Vector3(-D / 2, 0, 0),
+                    new THREE.Vector3(+D / 2, 0, 0),
+                    new THREE.Vector3(0, h, 0)
+                ];
+                // triphasic Synchronization  (0, 120°, 240°)
+                const colorPhases = [0, (2 * Math.PI) / 3, (4 * Math.PI) / 3];
+                const sub = [];
+
+                let sum_gd2 = 0;
+                let sum_gd3_phys = 0;
+
+                for (let i = 0; i < 3; i++) {
+                    const qk = spec.comp[i];
+                    const qp = PRESET[qk];
+
+                    // Tilt Local Intelligent
+                    let localTilt = 0;
+                    if (isCore || autoSector) {
+                        const isDown = (Math.abs(qp.Q) < 0.5);
+                        localTilt = isDown ? 2.0 : 0.0;
+                        if (antiLocal || cptSign < 0) localTilt *= -1;
+                    } else {
+                        localTilt = tilt34_used;
+                    }
+
+                    const dq = computeDeltas(qp, { antiParticleLocal: antiLocal, antiCPT: el.antiCPT.checked });
+
+                    const loop = buildLoop({
+                        center: centers[i],
+                        D2: qp.D2,
+                        samplesPerUnitPhys: PHYS_SAMPLES,
+                        samplesPerUnitVis: visPts,
+                        maxPix: visMax,
+                        deltaD1: dq.H.deltaD1, deltaD2: dq.H.deltaD2, deltaD3: dq.H.deltaD3,
+                        A1, A2, A3,
+                        baseColor: colorForKey(qk),
+                        phaseOffset: colorPhases[i] 
+                    });
+
+                    const startP = loopStartPoint(centers[i], A1, A2, A3);
+                    const gd2_i = gammaProjection(loop.pts, axis_d2, startP);
+                    const gd3_i = gammaProjection(loop.pts, axis_d3, startP);
+
+                    const localHelix = Math.sqrt(1.0 + localTilt * localTilt);
+                    sum_gd2 += gd2_i;
+                    sum_gd3_phys += (gd3_i * localHelix);
+
+                    sub.push({ loop, S: loop.pts[0], E: loop.pts[loop.pts.length - 1] });
+
+                    if (showLine) group.add(makeLine(loop.ptsLine, loop.colsLine, 0.28));
+                    if (showPts) group.add(makePts(loop.ptsPix, loop.colsPix, 0.9));
+                }
+
+                gamma_d2 = sum_gd2 / 3.0;
+                avg_gamma_d3_phys = sum_gd3_phys / 3.0;
+
+                if (confMode === "y") {
+                    const scaleZ = 1 + Math.max(0, wd3_used);
+                    const anchors = [{ S: sub[0].S, E: sub[0].E }, { S: sub[1].S, E: sub[1].E }, { S: sub[2].S, E: sub[2].E }];
+                    const sol = bestJunction(anchors, scaleZ);
+                    if (sol) {
+                        group.add(makeJunctionLines(sol.J, sol.used, 0.85));
+                        const meanLeg = (sol.J.distanceTo(sol.used[0]) + sol.J.distanceTo(sol.used[1]) + sol.J.distanceTo(sol.used[2])) / 3;
+                        E_conf = meanLeg / Math.max(1e-12, D);
+                    }
+                } else if (confMode === "tri") {
+                    const tri = buildTriadicSparse(sub[0].loop.pts, sub[1].loop.pts, sub[2].loop.pts, triSlices);
+                    group.add(makeChords(tri.chordPts, 0xffdd44, 0.18));
+                    E_conf = tri.meanLen / Math.max(1e-12, D);
+                }
+            }
+
+            // 6. Finalization Physics
+            const gamma_d3_final = avg_gamma_d3_phys;
+            const gammaEff = gamma_d2 + wd3_used * gamma_d3_final + wch_used * E_conf;
+
+
+            const nEff = n_harm;
+
+            let eta = 0;
+            if (el.etaMode.value === "calib_me") {
+                if (el.lockEta.checked && etaLockedValue != null) eta = etaLockedValue;
+                else {
+                    const pe = PRESET.e;
+                    const He = holonomyFromTemplate(pe.D2, pe.D13, pe.Q, DELTA_SIGMA_TOTAL);
+                    const loopE = buildLoop({
+                        center: new THREE.Vector3(0, 0, 0), D2: pe.D2, samplesPerUnitPhys: 2400, maxPix: 100, samplesPerUnitVis: 10,
+                        deltaD1: He.deltaD1, deltaD2: He.deltaD2, deltaD3: He.deltaD3,
+                        A1: CALIB_E_SHAPE.A1, A2: CALIB_E_SHAPE.A2, A3: CALIB_E_SHAPE.A3
+                    });
+                    const startPE = loopStartPoint(new THREE.Vector3(0, 0, 0), CALIB_E_SHAPE.A1, CALIB_E_SHAPE.A2, CALIB_E_SHAPE.A3);
+                    const gE = gammaProjection(loopE.pts, axis_d2, startPE);
+                    eta = etaFromMode(gE);
+                    el.etaVal.value = eta.toExponential(6);
+                    if (el.lockEta.checked) etaLockedValue = eta;
+                }
+            } else if (el.etaMode.value === "calib_cosmo") {
+                eta = etaFromMode(null);
+                el.etaVal.value = eta.toExponential(6);
+            } else {
+                etaLockedValue = null;
+                eta = etaFromMode(null);
+            }
+            el.etaValTxt.textContent = eta.toExponential(6);
+
+            if (el.etaMode.value !== "fix_Ne") {
+                const Nloop_e_now = eta * 22.654 * cosTheta;
+                el.NloopE.value = Nloop_e_now.toExponential(6);
+            }
+
+            const res = computeMass({ Phi: Phi_obj, eta, nEff, gammaEff, cosTheta });
+            const m_MeV = res.m * CONSTANTS.MEV_PER_KG;
+
+            const fitStr = (el.fitMeV.value || "").trim();
+            const targetMeV = fitStr ? parseFloat(fitStr) : targetMeVForEntity(spec.key);
+            const errPct = (targetMeV > 0) ? Math.abs(1 - (m_MeV / targetMeV)) * 100 : NaN;
+            const signedErrPct = (targetMeV > 0) ? ((m_MeV / targetMeV) - 1) * 100 : NaN;
+
+            let nColor = "#4f4";
+            if (isCore) nColor = "#d8f"; // Special color for computed n
+            else if (Number.isFinite(errPct)) {
+                if (errPct > 15.0) nColor = "#f44";
+                else if (errPct > 5.0) nColor = "#fe4";
+            }
+
+            el.out.className = "box";
+            if (Number.isFinite(errPct)) {
+                if (errPct > 15) el.out.className = "box danger";
+                else if (errPct > 5) el.out.className = "box warn";
+            }
+            if (isCore) el.out.className = "box core-active";
+
+            const errDisplay = Number.isFinite(signedErrPct)
+                ? `<span style="color:${(errPct < 5) ? "#4f4" : (errPct < 15) ? "#fe4" : "#f44"}">${(signedErrPct > 0 ? "+" : "")}${signedErrPct.toFixed(3)}%</span>`
+                : "N/A";
+
+            const tgtDisplay = (targetMeV > 0)
+                ? `<div class="sub">Target: ${targetMeV.toFixed(4)} MeV (Err: ${errDisplay})</div>`
+                : `<div class="sub">Target: (not set)</div>`;
+
+            const k_univ = res.Nloop / (4 * Math.PI / CONSTANTS.ALPHA * CONSTANTS.SIN2_THETA_W);
+
+            const tableStyle = "width:100%; table-layout:fixed; text-align:center; font-size:10px; border-collapse:collapse;";
+            const thStyle = "color:var(--label-color); border-bottom:1px solid var(--panel-border); padding-bottom:2px;";
+            const tdStyle = "color:var(--val-color); font-weight:bold; padding-top:2px;";
+            const fmt = (v) => parseFloat(v.toFixed(3));
+
+            let headersHTML = "", valuesHTML = "";
+
+            if (isCore) {
+                headersHTML = `<td style="${thStyle}">r1</td><td style="${thStyle}">r3</td><td style="${thStyle}">antiPart</td><td style="${thStyle}">antiCPT</td>`;
+                valuesHTML = `<td style="${tdStyle}">${fmt(r1)}</td><td style="${tdStyle}">${fmt(r3)}</td><td style="${tdStyle}">${antiLocal ? "ON" : "OFF"}</td><td style="${tdStyle}">${el.antiCPT.checked ? "ON" : "OFF"}</td>`;
+            } else {
+                headersHTML = `<td style="${thStyle}">r1</td><td style="${thStyle}">r3</td><td style="${thStyle}">w_d3</td><td style="${thStyle}">tilt</td><td style="${thStyle}">Q</td><td style="${thStyle}">D2</td><td style="${thStyle}">D13</td><td style="${thStyle}">antiPart</td><td style="${thStyle}">antiCPT</td>`;
+                valuesHTML = `<td style="${tdStyle}">${fmt(r1)}</td><td style="${tdStyle}">${fmt(r3)}</td><td style="${tdStyle}">${fmt(wd3_used)}</td><td style="${tdStyle}">${fmt(tilt34_used)}</td><td style="${tdStyle}">${fmt(spec.Q)}</td><td style="${tdStyle}">${spec.D2}</td><td style="${tdStyle}">${spec.D13}</td><td style="${tdStyle}">${antiLocal ? "ON" : "OFF"}</td><td style="${tdStyle}">${el.antiCPT.checked ? "ON" : "OFF"}</td>`;
+            }
+
+            if (isBaryon) {
+                headersHTML += `<td style="${thStyle}">w_conf</td>`;
+                valuesHTML += `<td style="${tdStyle}">${fmt(wch_used)}</td>`;
+            }
+
+            el.in.innerHTML = `
+            <div style="font-size:11px; font-weight:bold; color:var(--header-text); margin-bottom:4px;">Grammar & Scenario Inputs</div>
+            <table style="${tableStyle}">
+                <tr>${headersHTML}</tr>
+                <tr>${valuesHTML}</tr>
+            </table>`;
+
+            const dimColor = isDayMode ? "#666" : "#889";
+            const valColor = "var(--val-color)";
+            const hrColor = isDayMode ? "#ccc" : "#334";
+
+            const rowEconf = (Math.abs(wch_used) > 1e-6)
+                ? `<tr><td style="padding:2px 0; color:var(--label-color); padding-left:8px;">↳ E_conf (val*w)</td><td style="padding:2px 0; text-align:right; color:${dimColor};">${(E_conf * wch_used).toFixed(5)}</td></tr>`
+                : "";
+
+            el.out.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:11px; color:var(--label-color);">Calculated Mass</div>
+                        <div style="font-size:18px; font-weight:bold; color:#fff;">${m_MeV.toFixed(6)} <span style="font-size:12px; color:#aaa;">MeV</span></div>
+                    </div>
+                    <div style="text-align:right;">${tgtDisplay}</div>
+                </div>
+                <hr style="border:0;border-top:1px solid ${hrColor};margin:8px 0"/>
+                <table style="width:100%; font-size:11px; border-collapse:collapse;">
+                    <tr><td style="color:var(--label-color)">Nloop (total)</td><td style="text-align:right;font-weight:bold;color:${valColor}">${res.Nloop.toExponential(5)}</td></tr>
+                    
+                    <tr><td colspan="2" style="border-top:1px dashed ${hrColor}; height:4px;"></td></tr>
+
+                    <tr><td style="color:var(--label-color)">γ_eff</td><td style="text-align:right;font-weight:bold;color:${valColor}">${gammaEff.toFixed(6)}</td></tr>
+                    <tr><td style="color:var(--label-color);padding-left:8px">↳ γ_d2</td><td style="text-align:right;color:${dimColor}">${gamma_d2.toFixed(5)}</td></tr>
+                    <tr><td style="color:var(--label-color);padding-left:8px">↳ γ_d3_phys (avg)</td><td style="text-align:right;color:${dimColor}">${avg_gamma_d3_phys.toFixed(5)}</td></tr>
+                    ${rowEconf}
+                    
+                    <tr><td colspan="2" style="border-top:1px dashed ${hrColor}; height:4px;"></td></tr>
+
+                    <tr><td style="color:var(--label-color)">Q_eff / D13_eff</td><td style="text-align:right;color:${valColor}">${dObj.Qeff.toFixed(2)} / ${dObj.d13eff}</td></tr>
+                    <tr><td style="color:var(--label-color)">helixFactor</td><td style="text-align:right;color:${valColor}">${helixFactor.toFixed(5)}</td></tr>
+                    <tr><td style="color:var(--label-color)">Spin Bridge k</td><td style="text-align:right;color:${valColor}">${k_univ.toExponential(4)}</td></tr>
+                    <tr><td style="color:var(--label-color)">Φ_topo (rad)</td><td style="text-align:right;color:${valColor}">${Phi_obj.toFixed(6)}</td></tr>
+
+                    <tr style="border-top:1px solid ${dimColor};">
+                        <td style="padding:4px 0 2px 0; color:var(--header-text);">Harmonic <b>n</b> ${isCore ? "<span style='color:var(--core-color);'>(Ab Initio)</span>" : ""}</td>
+                        <td style="padding:4px 0 2px 0; text-align:right; font-weight:bold; font-size:12px; color:${nColor};">${nEff}</td>
+                    </tr>
+                </table>
+            `;
+
+            const fmtErr = (v) => (Math.abs(v) < 1e-9) ? "0" : v.toExponential(2);
+            el.legendContent.innerHTML = `
+<div class="sub mono">
+Holonomies (Values):
+  Δd13 = -π·D13       = ${fmt(Hobj.deltaD13)}
+  Δd1  = 6π·Q         = ${fmt(Hobj.deltaD1)}
+  Δd2  = 4π           = ${fmt(Hobj.deltaD2)}
+  Δd3  = Δd13 - Δd1   = ${fmt(Hobj.deltaD3)}
+
+Closure checks:
+  (Δd1+Δd3-Δd13) = ${fmtErr(err13)}
+  cycles(d1,d2,d3) = (${fmt(cyc1)}, ${fmt(cyc2)}, ${fmt(cyc3)})
+  cycleErr(d1,d2,d3) = (${fmtErr(cycErr(cyc1))}, ${fmtErr(cycErr(cyc2))}, ${fmtErr(cycErr(cyc3))})
+
+Layers:
+  loop line + pixel points (downsample)
+  confinement (baryons): OFF / Y / triadic sparse
+</div>`;
+
+            last = { spec, eta, Phi_obj, gammaEff, m_MeV, Nloop: res.Nloop };
+        }
+
+        // =============================================================
+        // 7a. SCAN n (ported approach: BigInt remainder scan, no "median")
+        // =============================================================
+        let lastScanData = null;
+
+        //  Canvas helpers 
+        function getCanvas2D(canvas) { return canvas.getContext("2d", { alpha: false }); }
+
+        function resizeCanvasToCSS(canvas) {
+            const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+            const rect = canvas.getBoundingClientRect();
+            const w = Math.max(10, Math.floor(rect.width));
+            const h = Math.max(10, Math.floor(rect.height));
+            canvas.width = Math.floor(w * dpr);
+            canvas.height = Math.floor(h * dpr);
+            return { w, h, dpr };
+        }
+
+        //  BigInt decimal helpers (stable beyond 2^53) 
+        function pow10n(k) { let r = 1n; for (let i = 0; i < k; i++) r *= 10n; return r; }
+
+        // returns round(value * 10^scaleDigits) as BigInt; supports "2.295443e20"
+        function parseDecimalToScaledBigInt(s, scaleDigits = 0) {
+            let str = String(s ?? "").trim();
+            if (!str) return 0n;
+
+            let sign = 1n;
+            if (str[0] === "+") str = str.slice(1);
+            else if (str[0] === "-") { sign = -1n; str = str.slice(1); }
+
+            const m = str.match(/^([^eE]+)(?:[eE]([+-]?\d+))?$/);
+            if (!m) return 0n;
+
+            let mant = m[1];
+            const exp = m[2] ? (parseInt(m[2], 10) || 0) : 0;
+
+            let decimals = 0;
+            if (mant.includes(".")) {
+                const parts = mant.split(".");
+                decimals = (parts[1] || "").length;
+                mant = (parts[0] || "") + (parts[1] || "");
+            }
+
+            mant = mant.replace(/^0+/, "") || "0";
+            let M;
+            try { M = BigInt(mant); } catch { return 0n; }
+
+            const netExp = exp - decimals + scaleDigits;
+            if (netExp >= 0) return sign * (M * pow10n(netExp));
+
+            const den = pow10n(-netExp);
+            let q = M / den;
+            const r = M % den;
+            if (r * 2n >= den) q += 1n; // half-up rounding
+            return sign * q;
+        }
+
+        /**
+         * Compute NrefInt = round(eta * Phi * cosTheta) as BigInt.
+         * - If etaMode === "fix_Ne": we use Nloop_e directly (already an integer-like value in your UI).
+         * - Else: fixed-point 1e12 triple product (eta * Phi * cosTheta).
+         */
+        function computeNrefIntBig({ etaMode, etaFloat, etaStr, nloopEStr, Phi, cosTheta }) {
+            if (etaMode === "fix_Ne") {
+                // In this mode, user provides Nloop_e (string), treat as integer-ish.
+                return parseDecimalToScaledBigInt(nloopEStr, 0);
+            }
+
+            // Otherwise Nref = eta * Phi * cosTheta
+            const SCALE = 1000000000000n; // 1e12
+            const etaUseStr = (etaMode === "fix_eta")
+                ? String(etaStr ?? "")
+                : Number(etaFloat ?? 0).toExponential(17);
+
+            const etaScaled = parseDecimalToScaledBigInt(etaUseStr, 12); // eta * 1e12 as BigInt
+            const phiScaled = BigInt(Math.round((Phi ?? 0) * 1e12));
+            const cosScaled = BigInt(Math.round((cosTheta ?? 0) * 1e12));
+
+            const den = SCALE * SCALE * SCALE; // 1e36
+            const num = etaScaled * phiScaled * cosScaled;
+
+            const half = den / 2n;
+            const adj = (num >= 0n) ? half : -half;
+            return (num + adj) / den;
+        }
+
+        /**
+         * Core scan:
+         * epsN(n) = min( r, n-r ) / n, where r = NrefInt mod n
+         * epsK(n) = min( r, D-r ) / D, where r = (NrefInt*KSCALE) mod (n*Nspin_i), D=(n*Nspin_i)
+         *
+         * This avoids float artifacts and removes the “median-of-sector” behavior.
+         */
+
+
+        function getGridScore(n, NrefInt, Nspin) {
+            const bn = BigInt(n);
+
+            // εN = (Nref mod n) / n
+            let rN = NrefInt % bn;
+            if (rN < 0n) rN += bn;
+            const rNm = (rN > (bn - rN)) ? (bn - rN) : rN;
+            const epsN = Number(rNm) / n;
+
+            // εk = (Nref / (n * Nspin)) mod 1
+            // Use fixed point BigInt for precision
+            const SPIN_SCALE = 1000000n;
+            const Nspin_i = BigInt(Math.round(Nspin * 1e6));
+            const denomK = bn * Nspin_i;
+            const numK = NrefInt * SPIN_SCALE;
+
+            let rK = numK % denomK;
+            if (rK < 0n) rK += denomK;
+            const rKm = (rK > (denomK - rK)) ? (denomK - rK) : rK;
+            const epsK = Number(rKm) / Number(denomK);
+
+            return { score: Math.hypot(epsN, epsK), epsN, epsK };
+        }
+
+        function getGenerativeTarget(spec) {
+            const theta = el.coreMode.checked ? parseFloat(el.thetaStruct.value) : CONSTANTS.THETA_STRUCT;
+            const k = spec.key;
+
+            // Gen 1 Fundamental: 1
+            if (k === "e" || k === "u" || k === "d") return 1.0;
+
+            // Leptons
+            if (k === "mu") {
+                // Gen 2 (mu) : exp(A_BASE * (1 + THETA^2))
+                return Math.exp(A_BASE * (1 + theta ** 2));
+            }
+            if (k === "tau") {
+                // Gen 3 (tau) : n_mu * (CONSTANTS.ALPHA_INV ^ ln(sqrt(PI)))
+                const n_mu = Math.exp(A_BASE * (1 + theta ** 2));
+                return n_mu * Math.pow(CONSTANTS.ALPHA_INV, Math.log(Math.sqrt(Math.PI)));
+            }
+
+            // Up-Type Quarks
+            if (k === "c") {
+                // Gen 2 (c) : exp(A_BASE * (1 + THETA))
+                return Math.exp(A_BASE * (1 + theta));
+            }
+            if (k === "t") {
+                // Gen 3 (t) : n_c * CONSTANTS.ALPHA_INV
+                const n_c = Math.exp(A_BASE * (1 + theta));
+                return n_c * CONSTANTS.ALPHA_INV;
+            }
+
+            // Down-Type Quarks
+            if (k === "s") {
+                // Gen 2 (s) : exp(A_BASE * (1 - THETA))
+                return Math.exp(A_BASE * (1 - theta));
+            }
+            if (k === "b") {
+                // Gen 3 (b) : n_s * (CONSTANTS.ALPHA_INV / PI)
+                const n_s = Math.exp(A_BASE * (1 - theta));
+                return n_s * (CONSTANTS.ALPHA_INV / Math.PI);
+            }
+
+            return 1.0; 
+        }
+
+        function runScanWindow(nMin, nMax, n_theo) {
+            if (!last) return null;
+
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            const eta = last.eta;
+            const Phi = last.Phi_obj;
+            const gamma = last.gammaEff;
+
+            // BigInt-safe Nref for epsilon scans
+            const NrefInt = computeNrefIntBig({
+                etaMode: el.etaMode.value,
+                etaFloat: eta,
+                etaStr: el.etaVal.value,  
+                nloopEStr: el.NloopE.value, 
+                Phi,
+                cosTheta
+            });
+
+            const Nref = Number(NrefInt);
+            const dSig = CONSTANTS.ALPHA / CONSTANTS.SIN2_THETA_W;
+            const Nspin = (4 * Math.PI) / dSig;
+
+            const epsN = new Float64Array(nMax + 1);
+            const epsK = new Float64Array(nMax + 1);
+            const massErr = new Float64Array(nMax + 1); // For visualizing elastic error
+
+            let yMax = 0;
+            const candidates = [];
+
+            for (let n = nMin; n <= nMax; n++) {
+                const res = getGridScore(n, NrefInt, Nspin);
+                epsN[n] = res.epsN;
+                epsK[n] = res.epsK;
+
+                // Calculate Elastic/Mass Error (Float precision is enough for this curve)
+                // Error = |1 - n / n_theo|
+                const err = Math.abs(1.0 - (n / n_theo));
+                massErr[n] = err;
+
+                yMax = Math.max(yMax, res.epsN, res.epsK);
+
+                const massKg = (CONSTANTS.M_PLANCK * gamma * n) / Math.max(1e-18, Nref);
+                const massMeV = massKg * CONSTANTS.MEV_PER_KG;
+
+                candidates.push({
+                    n,
+                    score: res.score,
+                    eN: res.epsN,
+                    eK: res.epsK,
+                    massMeV,
+                    err
+                });
+            }
+
+            candidates.sort((a, b) => a.score - b.score);
+
+            return {
+                type: "n",
+                nMin, nMax,
+                epsN,
+                epsK,
+                massErr, // Export for drawing
+                yMax,
+                best: candidates,
+                n_theo
+            };
+        }
+
+        function runScan(nMax = 10000) {
+            if (!last) return null;
+
+            // Ensure last is up-to-date
+
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            const etaMode = el.etaMode.value;
+            const eta = last.eta;             // float (used only as fallback)
+            const Phi = last.Phi_obj;         // float
+            const gamma = last.gammaEff;      // float
+
+            // BigInt-safe Nref for epsilon scans
+            const NrefInt = computeNrefIntBig({
+                etaMode,
+                etaFloat: eta,
+                etaStr: el.etaVal.value,      // raw text (important for fix_eta)
+                nloopEStr: el.NloopE.value,   // raw text (important for fix_Ne)
+                Phi,
+                cosTheta
+            });
+
+            // Float Nref for approximate mass / display only
+            // Use the true float product (more consistent with your mass pipeline)
+            const NrefFloat = (etaMode === "fix_Ne")
+                ? Number(el.NloopE.value || "0")
+                : (eta * Phi * cosTheta);
+
+            const dSig = CONSTANTS.ALPHA / CONSTANTS.SIN2_THETA_W;
+            const Nspin = (4 * Math.PI) / dSig;
+
+            const epsN = new Float64Array(nMax + 1);
+            const epsK = new Float64Array(nMax + 1);
+
+            let yMax = 0;
+            const candidates = new Array(nMax);
+
+            const spec = getSpec();
+            const fitStr = (el.fitMeV.value || "").trim();
+            const targetMeV = fitStr ? parseFloat(fitStr) : targetMeVForEntity(spec.key);
+
+            // Fixed-point approximation for k remainder
+            const KSCALE = 1000000n; // 1e6
+            const Nspin_i = BigInt(Math.round(Nspin * 1e6)); // Nspin * 1e6 as integer
+
+            for (let n = 1; n <= nMax; n++) {
+                const bn = BigInt(n);
+
+                // epsN: remainder distance for NrefInt mod n
+                let rN = NrefInt % bn;
+                if (rN < 0n) rN += bn; // 0..n-1
+                const rNm = (rN > (bn - rN)) ? (bn - rN) : rN;
+                const eN = Number(rNm) / n;
+                epsN[n] = eN;
+
+                // epsK: remainder distance for (NrefInt*KSCALE) mod (n*Nspin_i)
+                const denomK = bn * Nspin_i;
+                const numK = NrefInt * KSCALE;
+
+                let rK = numK % denomK;
+                if (rK < 0n) rK += denomK; // 0..denomK-1
+                const rKm = (rK > (denomK - rK)) ? (denomK - rK) : rK;
+
+                // denomK <= ~4e12 here (n<=10000), Number conversion is safe enough
+                const eK = Number(rKm) / Number(denomK);
+                epsK[n] = eK;
+
+                yMax = Math.max(yMax, eN, eK);
+
+                // approximate mass and relative error
+                const massKg = (CONSTANTS.M_PLANCK * gamma * n) / Math.max(1e-30, NrefFloat);
+                const massMeV = massKg * CONSTANTS.MEV_PER_KG;
+                const err = (targetMeV > 0 && Number.isFinite(massMeV))
+                    ? Math.abs(1 - (massMeV / targetMeV))
+                    : NaN;
+
+                // exact quotient+remainder to display integer structure
+                const qN = NrefInt / bn;
+
+                const qK = (NrefInt * KSCALE) / denomK;
+
+                // score
+                const score = Math.hypot(eN, eK);
+
+                candidates[n - 1] = {
+                    n,
+                    eN, eK,
+                    score,
+                    massMeV,
+                    err,
+
+                    // exact integer decomposition (as strings)
+                    Nloop_q: qN.toString(),
+                    Nloop_r: rN.toString(),
+                    Nloop_n: String(n),
+
+                    k_q: qK.toString(),
+                    k_r: rK.toString(),
+                    k_denom: denomK.toString()
+                };
+            }
+
+            // Best lists (combined, then N-first, then K-first)
+            const best = [...candidates]
+                .sort((a, b) => (a.score - b.score) || (a.n - b.n))
+                .slice(0, 200);
+
+            const bestByN = [...candidates]
+                .sort((a, b) => (a.eN - b.eN) || (a.eK - b.eK) || (a.n - b.n))
+                .slice(0, 200);
+
+            const bestByK = [...candidates]
+                .sort((a, b) => (a.eK - b.eK) || (a.eN - b.eN) || (a.n - b.n))
+                .slice(0, 200);
+
+            return {
+                type: "n",
+                nMax,
+                epsN,
+                epsK,
+                yMax,
+                best,
+                bestByN,
+                bestByK,
+                NrefInt,
+                NrefFloat,
+                Nspin,
+                targetMeV
+            };
+        }
+
+        // ---- Chart drawing (kept compatible with your existing UI) ----
+        // ---- Chart drawing (CORRIGÉ) ----
+        function drawScanChart(scan) {
+            const canvas = el.scanCanvas;
+            const { w, h, dpr } = resizeCanvasToCSS(canvas);
+            const ctx = getCanvas2D(canvas);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const showN = !!el.showEpsN?.checked;
+            const showK = !!el.showEpsK?.checked;
+            const showMassErr = !!el.showMassErr?.checked;
+
+            const style = getComputedStyle(document.body);
+            const bg = style.getPropertyValue('--scan-bg').trim();
+            const gridCol = style.getPropertyValue('--scan-grid').trim();
+            const axisCol = style.getPropertyValue('--scan-axis').trim();
+            const textCol = style.getPropertyValue('--scan-text').trim();
+
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, w, h);
+
+            const ml = 44, mr = 10, mt = 10, mb = 28;
+            const iw = Math.max(10, w - ml - mr);
+            const ih = Math.max(10, h - mt - mb);
+
+            const nMin = scan.nMin || 1;
+            const nMax = scan.nMax || 10000;
+
+            let yMax = 0;
+            yMax = 0.05; // Base scale for detailed view
+
+            // Find actual max in window to prevent clipping if values are large
+            if (scan.yMax && scan.yMax > yMax) yMax = Math.min(0.5, scan.yMax);
+
+            ctx.strokeStyle = gridCol;
+            ctx.lineWidth = 1;
+            const gy = 5;
+            for (let i = 0; i <= gy; i++) {
+                const y = mt + (ih * i) / gy;
+                ctx.beginPath(); ctx.moveTo(ml, y); ctx.lineTo(ml + iw, y); ctx.stroke();
+            }
+            const gx = 5;
+            for (let i = 0; i <= gx; i++) {
+                const x = ml + (iw * i) / gx;
+                ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, mt + ih); ctx.stroke();
+            }
+
+            ctx.strokeStyle = axisCol;
+            ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, mt + ih); ctx.lineTo(ml + iw, mt + ih); ctx.stroke();
+
+            ctx.fillStyle = textCol;
+            ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+            ctx.fillText("ε / err", 6, mt + 12);
+            ctx.fillText("n", ml + iw - 10, mt + ih + 22);
+
+            ctx.globalAlpha = 0.6;
+            for (let i = 0; i <= gy; i++) {
+                const val = yMax * (1 - i / gy);
+                const y = mt + (ih * i) / gy;
+                ctx.fillText(val.toFixed(3), 6, y + 4);
+            }
+            for (let i = 0; i <= gx; i++) {
+                const val = Math.round(nMin + (nMax - nMin) * (i / gx));
+                const x = ml + (iw * i) / gx;
+                ctx.fillText(String(val), x - 10, mt + ih + 16);
+            }
+            ctx.globalAlpha = 1.0;
+
+            function plotSeries(arr, strokeStyle, dashed = false) {
+                // Protection si le tableau est vide ou indéfini
+                if (!arr) return;
+
+                const range = nMax - nMin;
+                if (range <= 0) return;
+
+                const stride = Math.max(1, Math.ceil(range / 2500));
+                ctx.strokeStyle = strokeStyle;
+                ctx.lineWidth = dashed ? 2 : 1;
+                if (dashed) ctx.setLineDash([4, 4]);
+                else ctx.setLineDash([]);
+
+                let started = false;
+                ctx.beginPath();
+                for (let n = nMin; n <= nMax; n += stride) {
+                    const eps = arr[n];
+                    if (!Number.isFinite(eps)) continue;
+                    // Clip visuals
+                    const val = Math.min(yMax * 1.5, eps);
+                    const x = ml + iw * ((n - nMin) / range);
+                    const y = mt + ih * (1 - (val / yMax));
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            const colN = isDayMode ? "rgba(0,100,200,0.8)" : "rgba(120,200,255,0.90)";
+            const colK = isDayMode ? "rgba(200,100,0,0.8)" : "rgba(255,190,120,0.90)";
+            const colMass = "#ffd700";
+
+            if (showMassErr && scan.massErr) plotSeries(scan.massErr, colMass, false);
+            if (showN) plotSeries(scan.epsN, colN);
+            if (showK) plotSeries(scan.epsK, colK);
+
+            // Draw target line if available
+            if (scan.n_theo) {
+                const xT = ml + iw * ((scan.n_theo - nMin) / (nMax - nMin));
+                if (xT >= ml && xT <= ml + iw) {
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+                    ctx.setLineDash([2, 4]);
+                    ctx.beginPath(); ctx.moveTo(xT, mt); ctx.lineTo(xT, mt + ih); ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // Draw Best Points
+            ctx.fillStyle = "rgba(255,50,50,1.0)";
+            if (scan.best) {
+                for (let i = 0; i < Math.min(5, scan.best.length); i++) {
+                    const b = scan.best[i];
+                    if (b.n < nMin || b.n > nMax) continue;
+                    const eps = Math.min(b.eN, b.eK);
+                    const x = ml + iw * ((b.n - nMin) / (nMax - nMin));
+                    const y = mt + ih * (1 - (eps / yMax));
+                    ctx.beginPath(); ctx.arc(x, y, 3.0, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+        }
+
+        // ---- Best list rendering ----
+        function renderBestList(scan) {
+            const lines = [];
+
+            function section(title, list) {
+                lines.push(title);
+                lines.push("  n      εN         εk        mass(MeV)   err(%)     Nref mod n");
+                lines.push("-----------------------------------------------------------------------");
+                const top = Math.min(50, list.length);
+                for (let i = 0; i < top; i++) {
+                    const b = list[i];
+                    const nStr = String(b.n).padStart(5);
+                    const eNStr = b.eN.toExponential(3).padStart(10);
+                    const eKStr = b.eK.toExponential(3).padStart(10);
+                    const mStr = (Number.isFinite(b.massMeV) ? b.massMeV.toFixed(3) : "NaN").padStart(10);
+                    const epStr = (Number.isFinite(b.err) ? (100 * b.err).toFixed(3) : "N/A").padStart(8);
+                    const rStr = `${b.Nloop_r}/${b.Nloop_n}`.padStart(12);
+
+                    lines.push(`  ${nStr}  ${eNStr}  ${eKStr}  ${mStr}  ${epStr}  ${rStr}`);
+                }
+                lines.push("");
+            }
+
+            section("Top 50 — combined (min sqrt(εN^2+εk^2)):", scan.best || []);
+            section("Top 50 — εN-first (then εk):", scan.bestByN || []);
+            section("Top 50 — εk-first (then εN):", scan.bestByK || []);
+
+            lines.push("Definitions (exact remainders):");
+            lines.push("  εN = min(r, n-r)/n   where r = NrefInt mod n");
+            lines.push("  εk = min(r, D-r)/D   where r = (NrefInt*1e6) mod D, D = n*(Nspin*1e6 rounded)");
+            lines.push("");
+
+            const nSel = Math.max(1, Math.round(parseFloat(el.harmN.value || "1")));
+            lines.push(`Selected n (UI) = ${nSel}`);
+            lines.push(`  (Tip) Click the scan chart to pick n, then use Auto-fit n / compare mass.`);
+            el.scanBest.textContent = lines.join("\n");
+        }
+
+        // Optional: click on chart => set n (disabled if Core locks n) 
+        function nFromCanvasX(ev, scan) {
+            const rect = el.scanCanvas.getBoundingClientRect();
+            const x = ev.clientX - rect.left;
+            const w = rect.width;
+
+            // Keep consistent with chart margins in drawScanChart()
+            const ml = 44, mr = 10;
+            const iw = Math.max(10, w - ml - mr);
+
+            const xx = Math.min(ml + iw, Math.max(ml, x));
+            const t = (xx - ml) / iw;
+
+            const nMin = 1;
+            const nMax = scan.nMax;
+            return Math.round(nMin + t * (nMax - nMin));
+        }
+
+        if (el.scanCanvas) {
+            el.scanCanvas.addEventListener("click", (ev) => {
+                if (!lastScanData || lastScanData.type !== "n") return;
+                if (el.harmN.disabled) return; // Core mode locks n -> don't change it
+
+                const nPick = nFromCanvasX(ev, lastScanData);
+                el.harmN.value = String(Math.max(1, nPick));
+                updateAll(); // recompute mass + visuals with picked n
+            });
+        }
+
+
+        // =============================================================
+        // 7bis. SCAN r3 (fast, no Vector3 allocations)
+        // =============================================================
+
+        function setScanTitle(text) {
+            const titleElem = document.querySelector("#scanPanel .panelTitle");
+            if (titleElem) titleElem.textContent = text;
+        }
+
+        function setScanLegend(labelA, labelB, enableB = true) {
+            if (el.scanLblA) el.scanLblA.textContent = labelA;
+            if (el.scanLblB) el.scanLblB.textContent = labelB;
+
+            // Reuse existing checkboxes:
+            // showEpsN => series A
+            // showEpsK => series B (disabled for r3 scan by default)
+            if (el.showEpsN) el.showEpsN.checked = true;
+            if (el.showEpsK) {
+                el.showEpsK.checked = enableB;
+                el.showEpsK.disabled = !enableB;
+            }
+        }
+
+        // Streaming version of gammaProjection along axis d2 and d3 for the loop.
+        // Equivalent to gammaProjection(loop.pts, axis, startP) but without storing points.
+        // Since axes are (0,1,0) and (0,0,1), numerator becomes sum(|Δy|) and sum(|Δz|).
+        function gammaProjectionsFast({ center, D2, samplesPerUnitPhys, deltaD1, deltaD2, deltaD3, A1, A2, A3 }) {
+            const units = Math.max(1, D2 | 0);
+            const N_phys = units * Math.max(200, samplesPerUnitPhys | 0);
+
+            const d1_step = deltaD1 / N_phys;
+            const d2_step = deltaD2 / N_phys;
+            const d3_step = deltaD3 / N_phys;
+
+            let phi1 = 0, phi2 = 0, phi3 = 0;
+
+            // Start point consistent with loopStartPoint(center, A1, A2, A3)
+            const sx = center.x + A1 + A3;
+            const sy = center.y;
+            const sz = center.z + A2;
+
+            let px = sx, py = sy, pz = sz;
+
+            let sumAbsDy = 0, sumAbsDz = 0, sumLen = 0;
+
+            for (let i = 0; i < N_phys; i++) {
+                phi1 += d1_step; phi2 += d2_step; phi3 += d3_step;
+
+                const x = center.x + A1 * Math.cos(phi1) + A3 * Math.cos(phi3);
+                const y = center.y + A2 * Math.sin(phi2);
+                const z = center.z + A1 * Math.sin(phi1) + A2 * Math.cos(phi2) + A3 * Math.sin(phi3);
+
+                const dx = x - px, dy = y - py, dz = z - pz;
+                const len = Math.hypot(dx, dy, dz);
+                if (len > 1e-12) {
+                    sumAbsDy += Math.abs(dy);
+                    sumAbsDz += Math.abs(dz);
+                    sumLen += len;
+                }
+                px = x; py = y; pz = z;
+            }
+
+            // Closing segment
+            {
+                const dx = sx - px, dy = sy - py, dz = sz - pz;
+                const len = Math.hypot(dx, dy, dz);
+                if (len > 1e-12) {
+                    sumAbsDy += Math.abs(dy);
+                    sumAbsDz += Math.abs(dz);
+                    sumLen += len;
+                }
+            }
+
+            const g2 = (sumLen > 0) ? (sumAbsDy / sumLen) : 0;
+            const g3 = (sumLen > 0) ? (sumAbsDz / sumLen) : 0;
+            return { g2, g3, N_phys, sumLen };
+        }
+
+        function runScanR3(r3Min = 0.0, r3Max = 8.0, step = 0.005) {
+            if (!last) return null;
+
+            // We scan using CURRENT UI effective values (sliders already reflect auto-sector choices)
+            const spec = getSpec();
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            const eta = last.eta;
+
+            const nEff = Math.max(1, Math.round(parseFloat(el.harmN.value || "1")));
+            const r1 = parseFloat(el.r1.value || "2.0");
+            const A2 = 1.0;
+            const A1 = r1 * A2;
+
+            const wd3_used = parseFloat(el.wd3.value || "0");
+            const tilt34_used = parseFloat(el.tilt34.value || "0");
+            const helixFactor = Math.sqrt(1.0 + Math.abs(tilt34_used) * Math.abs(tilt34_used));
+            const wch_used = parseFloat(el.wch.value || "0");
+
+            const antiLocal = el.antiParticle?.checked ? true : false;
+            const antiCPT = el.antiCPT.checked ? true : false;
+
+            const dObj = computeDeltas(spec, { antiParticleLocal: antiLocal, antiCPT });
+            const Hobj = dObj.H;
+            const Phi_obj = phiTopo(Hobj.deltaD1, Hobj.deltaD2, Hobj.deltaD3);
+
+            const fitStr = (el.fitMeV.value || "").trim();
+            const targetMeV = fitStr ? parseFloat(fitStr) : targetMeVForEntity(spec.key);
+
+            // Scan resolution for gamma (fast method)
+            // Keep it moderate: higher -> sharper minima but slower.
+            const PHYS_SAMPLES_PER_UNIT_SCAN = 900;
+
+            const N = Math.max(2, Math.floor((r3Max - r3Min) / step) + 1);
+            const x = new Float64Array(N);
+            const err = new Float64Array(N);
+            const massMeV = new Float64Array(N);
+            const g2Arr = new Float64Array(N);
+            const g3Arr = new Float64Array(N);
+            const gEffArr = new Float64Array(N);
+
+            let yMax = 0;
+
+            // Helper to compute gamma/mass for one loop (or 3 loops for baryons)
+            function computeForR3(r3Val) {
+                const A3 = r3Val * A2;
+
+                let gamma_d2 = 0;
+                let gamma_d3 = 0;
+
+                if (!spec.comp) {
+                    const g = gammaProjectionsFast({
+                        center: { x: 0, y: 0, z: 0 },
+                        D2: spec.D2,
+                        samplesPerUnitPhys: PHYS_SAMPLES_PER_UNIT_SCAN,
+                        deltaD1: Hobj.deltaD1,
+                        deltaD2: Hobj.deltaD2,
+                        deltaD3: Hobj.deltaD3,
+                        A1, A2, A3
+                    });
+                    gamma_d2 = g.g2;
+                    gamma_d3 = g.g3;
+                } else {
+                    // Baryons: average of 3 constituents (confinement term ignored in scan to keep it clean)
+                    const D = parseFloat(el.spacing.value || "5.2");
+                    const h = Math.sqrt(3) / 2 * D;
+                    const centers = [
+                        { x: -D / 2, y: 0, z: 0 },
+                        { x: +D / 2, y: 0, z: 0 },
+                        { x: 0, y: h, z: 0 }
+                    ];
+                    let sum2 = 0, sum3 = 0;
+                    for (let i = 0; i < 3; i++) {
+                        const qk = spec.comp[i];
+                        const qp = PRESET[qk];
+                        const dq = computeDeltas(qp, { antiParticleLocal: antiLocal, antiCPT });
+                        const Hq = dq.H;
+
+                        const g = gammaProjectionsFast({
+                            center: centers[i],
+                            D2: qp.D2,
+                            samplesPerUnitPhys: PHYS_SAMPLES_PER_UNIT_SCAN,
+                            deltaD1: Hq.deltaD1,
+                            deltaD2: Hq.deltaD2,
+                            deltaD3: Hq.deltaD3,
+                            A1, A2, A3
+                        });
+                        sum2 += g.g2;
+                        sum3 += g.g3;
+                    }
+                    gamma_d2 = sum2 / 3;
+                    gamma_d3 = sum3 / 3;
+                }
+
+                const gamma_d3_phys = gamma_d3 * helixFactor;
+
+                // In scan r3, we ignore confinement contribution to avoid mixing effects.
+                const E_conf_scan = 0.0;
+
+                const gammaEff = gamma_d2 + wd3_used * gamma_d3_phys + wch_used * E_conf_scan;
+
+                const res = computeMass({ Phi: Phi_obj, eta, nEff, gammaEff, cosTheta });
+                const mMeV = res.m * CONSTANTS.MEV_PER_KG;
+
+                const e = (targetMeV > 0 && Number.isFinite(mMeV))
+                    ? Math.abs(1 - (mMeV / targetMeV))
+                    : NaN;
+
+                return { gamma_d2, gamma_d3, gammaEff, mMeV, e };
+            }
+
+            for (let i = 0; i < N; i++) {
+                const r3Val = r3Min + i * step;
+                x[i] = r3Val;
+
+                const v = computeForR3(r3Val);
+
+                g2Arr[i] = v.gamma_d2;
+                g3Arr[i] = v.gamma_d3;
+                gEffArr[i] = v.gammaEff;
+                massMeV[i] = v.mMeV;
+                err[i] = v.e;
+
+                if (Number.isFinite(v.e)) yMax = Math.max(yMax, v.e);
+            }
+
+            // Detect local minima (spectral branches)
+            const minimaIdx = [];
+            for (let i = 1; i < N - 1; i++) {
+                const a = err[i - 1], b = err[i], c = err[i + 1];
+                if (!Number.isFinite(b)) continue;
+                if (b <= a && b <= c) minimaIdx.push(i);
+            }
+
+            minimaIdx.sort((i, j) => (err[i] - err[j]) || (i - j));
+
+            // Fallback: global best points (if curve is monotone / noisy)
+            const allIdx = Array.from({ length: N }, (_, i) => i)
+                .filter(i => Number.isFinite(err[i]))
+                .sort((i, j) => (err[i] - err[j]) || (i - j));
+
+            function pack(idx) {
+                const r3Val = x[idx];
+                const e = err[idx];
+                const m = massMeV[idx];
+                const g2 = g2Arr[idx];
+                const g3 = g3Arr[idx];
+                const gEff = gEffArr[idx];
+                return {
+                    idx,
+                    r3: r3Val,
+                    err: e,
+                    errPct: e * 100,
+                    massMeV: m,
+                    gamma_d2: g2,
+                    gamma_d3: g3,
+                    gamma_d3_phys: g3 * helixFactor,
+                    gammaEff: gEff
+                };
+            }
+
+            const bestMinima = minimaIdx.slice(0, 80).map(pack);
+            const bestAll = allIdx.slice(0, 80).map(pack);
+
+            return {
+                type: "r3",
+                r3Min, r3Max, step,
+                N,
+                x,
+                err,
+                yMax,
+                massMeV,
+                g2Arr,
+                g3Arr,
+                gEffArr,
+                bestMinima,
+                bestAll,
+                meta: {
+                    entity: spec.key,
+                    name: spec.name,
+                    nEff,
+                    r1,
+                    wd3_used,
+                    tilt34_used,
+                    helixFactor,
+                    wch_used,
+                    targetMeV,
+                    antiLocal,
+                    antiCPT,
+                    PHYS_SAMPLES_PER_UNIT_SCAN,
+                    Phi_obj,
+                    eta
+                }
+            };
+        }
+
+        // =============================================================
+        // 7ter. SCAN r1 (NEW)
+        // =============================================================
+
+        function runScanR1(r1Min = 0.2, r1Max = 8.0, step = 0.005) {
+            if (!last) return null;
+
+            // We scan using CURRENT UI effective values (sliders already reflect auto-sector choices)
+            const spec = getSpec();
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            const eta = last.eta;
+
+            const nEff = Math.max(1, Math.round(parseFloat(el.harmN.value || "1")));
+
+            // Fixed R3 for this scan
+            const r3 = parseFloat(el.r3.value || "0.0");
+
+            // Fixed A2
+            const A2 = 1.0;
+            // A3 will be r3*A2 (fixed)
+            const A3 = r3 * A2;
+
+            const wd3_used = parseFloat(el.wd3.value || "0");
+            const tilt34_used = parseFloat(el.tilt34.value || "0");
+            const helixFactor = Math.sqrt(1.0 + Math.abs(tilt34_used) * Math.abs(tilt34_used));
+            const wch_used = parseFloat(el.wch.value || "0");
+
+            const antiLocal = el.antiParticle?.checked ? true : false;
+            const antiCPT = el.antiCPT.checked ? true : false;
+
+            const dObj = computeDeltas(spec, { antiParticleLocal: antiLocal, antiCPT });
+            const Hobj = dObj.H;
+            const Phi_obj = phiTopo(Hobj.deltaD1, Hobj.deltaD2, Hobj.deltaD3);
+
+            const fitStr = (el.fitMeV.value || "").trim();
+            const targetMeV = fitStr ? parseFloat(fitStr) : targetMeVForEntity(spec.key);
+
+            const PHYS_SAMPLES_PER_UNIT_SCAN = 900;
+
+            const N = Math.max(2, Math.floor((r1Max - r1Min) / step) + 1);
+            const x = new Float64Array(N);
+            const err = new Float64Array(N);
+            const massMeV = new Float64Array(N);
+            const g2Arr = new Float64Array(N);
+            const g3Arr = new Float64Array(N);
+            const gEffArr = new Float64Array(N);
+
+            let yMax = 0;
+
+            // Helper
+            function computeForR1(r1Val) {
+                const A1 = r1Val * A2; // Scan variable
+
+                let gamma_d2 = 0;
+                let gamma_d3 = 0;
+
+                if (!spec.comp) {
+                    const g = gammaProjectionsFast({
+                        center: { x: 0, y: 0, z: 0 },
+                        D2: spec.D2,
+                        samplesPerUnitPhys: PHYS_SAMPLES_PER_UNIT_SCAN,
+                        deltaD1: Hobj.deltaD1,
+                        deltaD2: Hobj.deltaD2,
+                        deltaD3: Hobj.deltaD3,
+                        A1, A2, A3
+                    });
+                    gamma_d2 = g.g2;
+                    gamma_d3 = g.g3;
+                } else {
+                    const D = parseFloat(el.spacing.value || "5.2");
+                    const h = Math.sqrt(3) / 2 * D;
+                    const centers = [
+                        { x: -D / 2, y: 0, z: 0 },
+                        { x: +D / 2, y: 0, z: 0 },
+                        { x: 0, y: h, z: 0 }
+                    ];
+                    let sum2 = 0, sum3 = 0;
+                    for (let i = 0; i < 3; i++) {
+                        const qk = spec.comp[i];
+                        const qp = PRESET[qk];
+                        const dq = computeDeltas(qp, { antiParticleLocal: antiLocal, antiCPT });
+                        const Hq = dq.H;
+
+                        const g = gammaProjectionsFast({
+                            center: centers[i],
+                            D2: qp.D2,
+                            samplesPerUnitPhys: PHYS_SAMPLES_PER_UNIT_SCAN,
+                            deltaD1: Hq.deltaD1,
+                            deltaD2: Hq.deltaD2,
+                            deltaD3: Hq.deltaD3,
+                            A1, A2, A3
+                        });
+                        sum2 += g.g2;
+                        sum3 += g.g3;
+                    }
+                    gamma_d2 = sum2 / 3;
+                    gamma_d3 = sum3 / 3;
+                }
+
+                const gamma_d3_phys = gamma_d3 * helixFactor;
+                const E_conf_scan = 0.0;
+                const gammaEff = gamma_d2 + wd3_used * gamma_d3_phys + wch_used * E_conf_scan;
+
+                const res = computeMass({ Phi: Phi_obj, eta, nEff, gammaEff, cosTheta });
+                const mMeV = res.m * CONSTANTS.MEV_PER_KG;
+
+                const e = (targetMeV > 0 && Number.isFinite(mMeV))
+                    ? Math.abs(1 - (mMeV / targetMeV))
+                    : NaN;
+
+                return { gamma_d2, gamma_d3, gammaEff, mMeV, e };
+            }
+
+            for (let i = 0; i < N; i++) {
+                const r1Val = r1Min + i * step;
+                x[i] = r1Val;
+
+                const v = computeForR1(r1Val);
+
+                g2Arr[i] = v.gamma_d2;
+                g3Arr[i] = v.gamma_d3;
+                gEffArr[i] = v.gammaEff;
+                massMeV[i] = v.mMeV;
+                err[i] = v.e;
+
+                if (Number.isFinite(v.e)) yMax = Math.max(yMax, v.e);
+            }
+
+            // Minima detection
+            const minimaIdx = [];
+            for (let i = 1; i < N - 1; i++) {
+                const a = err[i - 1], b = err[i], c = err[i + 1];
+                if (!Number.isFinite(b)) continue;
+                if (b <= a && b <= c) minimaIdx.push(i);
+            }
+            minimaIdx.sort((i, j) => (err[i] - err[j]) || (i - j));
+
+            const allIdx = Array.from({ length: N }, (_, i) => i)
+                .filter(i => Number.isFinite(err[i]))
+                .sort((i, j) => (err[i] - err[j]) || (i - j));
+
+            function pack(idx) {
+                const r1Val = x[idx];
+                const e = err[idx];
+                const m = massMeV[idx];
+                const g2 = g2Arr[idx];
+                const g3 = g3Arr[idx];
+                const gEff = gEffArr[idx];
+                return {
+                    idx,
+                    r1: r1Val, // Changed from r3 to r1
+                    err: e,
+                    errPct: e * 100,
+                    massMeV: m,
+                    gamma_d2: g2,
+                    gamma_d3: g3,
+                    gamma_d3_phys: g3 * helixFactor,
+                    gammaEff: gEff
+                };
+            }
+
+            const bestMinima = minimaIdx.slice(0, 80).map(pack);
+            const bestAll = allIdx.slice(0, 80).map(pack);
+
+            return {
+                type: "r1", // Type Flag
+                r1Min, r1Max, step,
+                N,
+                x,
+                err,
+                yMax,
+                massMeV,
+                g2Arr,
+                g3Arr,
+                gEffArr,
+                bestMinima,
+                bestAll,
+                meta: {
+                    entity: spec.key,
+                    name: spec.name,
+                    nEff,
+                    r3, // Fixed r3
+                    wd3_used,
+                    tilt34_used,
+                    helixFactor,
+                    wch_used,
+                    targetMeV,
+                    antiLocal,
+                    antiCPT,
+                    PHYS_SAMPLES_PER_UNIT_SCAN,
+                    Phi_obj,
+                    eta
+                }
+            };
+        }
+
+        // Drawing scan R3/R1 (Erreur Mass vs parameter r)
+        function drawScanChartR3(scan) {
+            const canvas = el.scanCanvas;
+            const { w, h, dpr } = resizeCanvasToCSS(canvas);
+            const ctx = getCanvas2D(canvas);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const showErr = !!el.showEpsN?.checked;
+
+            const style = getComputedStyle(document.body);
+            const bg = style.getPropertyValue('--scan-bg').trim();
+            const gridCol = style.getPropertyValue('--scan-grid').trim();
+            const axisCol = style.getPropertyValue('--scan-axis').trim();
+            const textCol = style.getPropertyValue('--scan-text').trim();
+
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, w, h);
+
+            const ml = 52, mr = 10, mt = 10, mb = 28;
+            const iw = Math.max(10, w - ml - mr);
+            const ih = Math.max(10, h - mt - mb);
+
+            // Bornes X spécifiques au scan R (réels)
+            let xMin, xMax, xLabel;
+            if (scan.type === 'r1') {
+                xMin = scan.r1Min; xMax = scan.r1Max; xLabel = "r1";
+            } else {
+                xMin = scan.r3Min; xMax = scan.r3Max; xLabel = "r3";
+            }
+
+            let yMax = scan.yMax || 0.05;
+            yMax = Math.max(0.001, yMax * 1.08);
+            yMax = Math.min(1.0, Math.max(0.02, yMax));
+
+            // Grilles
+            ctx.strokeStyle = gridCol;
+            ctx.lineWidth = 1;
+            const gy = 5;
+            for (let i = 0; i <= gy; i++) {
+                const y = mt + (ih * i) / gy;
+                ctx.beginPath(); ctx.moveTo(ml, y); ctx.lineTo(ml + iw, y); ctx.stroke();
+            }
+            const gx = 5;
+            for (let i = 0; i <= gx; i++) {
+                const x = ml + (iw * i) / gx;
+                ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, mt + ih); ctx.stroke();
+            }
+            ctx.strokeStyle = axisCol;
+            ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, mt + ih); ctx.lineTo(ml + iw, mt + ih); ctx.stroke();
+
+            // Textes
+            ctx.fillStyle = textCol;
+            ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+            ctx.fillText("err (%)", 8, mt + 12);
+            ctx.fillText(xLabel, ml + iw - 16, mt + ih + 22);
+
+            ctx.globalAlpha = 0.75;
+            for (let i = 0; i <= gy; i++) {
+                const val = yMax * (1 - i / gy) * 100; // en %
+                const y = mt + (ih * i) / gy;
+                ctx.fillText(val.toFixed(1), 6, y + 4);
+            }
+            for (let i = 0; i <= gx; i++) {
+                const val = xMin + (xMax - xMin) * (i / gx);
+                const x = ml + (iw * i) / gx;
+                ctx.fillText(val.toFixed(2), x - 14, mt + ih + 16);
+            }
+            ctx.globalAlpha = 1.0;
+
+            function plotErrSeries() {
+                if (!scan.err || !scan.x) return;
+                const N = scan.N;
+                const stride = Math.max(1, Math.ceil(N / iw));
+
+                // Couleur différente selon le type de scan
+                const col = (scan.type === 'r1')
+                    ? (isDayMode ? "rgba(120,60,0,0.85)" : "rgba(255,190,140,0.90)") // Orange
+                    : (isDayMode ? "rgba(0,120,60,0.85)" : "rgba(140,255,190,0.90)"); // Vert
+
+                ctx.strokeStyle = col;
+                ctx.lineWidth = 1;
+                let started = false;
+                ctx.beginPath();
+                for (let i = 0; i < N; i += stride) {
+                    const e = scan.err[i];
+                    if (!Number.isFinite(e)) continue;
+                    const xv = scan.x[i];
+                    const x = ml + iw * ((xv - xMin) / (xMax - xMin));
+                    const y = mt + ih * (1 - (e / yMax));
+                    if (!started) { ctx.moveTo(x, y); started = true; }
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            if (showErr) plotErrSeries();
+
+            // Minima
+            ctx.fillStyle = "rgba(255,100,100,0.95)";
+            const marks = (scan.bestMinima && scan.bestMinima.length) ? scan.bestMinima : (scan.bestAll || []);
+            for (let i = 0; i < Math.min(16, marks.length); i++) {
+                const b = marks[i];
+                const val = (scan.type === 'r1') ? b.r1 : b.r3;
+                const x = ml + iw * ((val - xMin) / (xMax - xMin));
+                const y = mt + ih * (1 - (b.err / yMax));
+                ctx.beginPath(); ctx.arc(x, y, 2.6, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        function renderBestListR3(scan) {
+            const m = scan.meta;
+            const lines = [];
+            const isR1 = (scan.type === 'r1');
+            const varName = isR1 ? "r1" : "r3";
+
+            lines.push(`Scan ${varName} — err(mass) vs ${varName}  [step=${scan.step}]`);
+            lines.push(`Entity: ${m.name} (${m.entity})`);
+            lines.push(`Target: ${Number.isFinite(m.targetMeV) ? m.targetMeV.toFixed(6) : "N/A"} MeV`);
+
+            // Show fixed variable
+            if (isR1) lines.push(`Fixed r3=${m.r3.toFixed(6)}`);
+            else lines.push(`Fixed r1=${m.r1.toFixed(6)}`);
+
+            lines.push(`nEff=${m.nEff} ; wd3=${m.wd3_used.toFixed(6)} ; tilt=${m.tilt34_used.toFixed(6)} ; helix=${m.helixFactor.toFixed(6)} ; w_conf=${m.wch_used.toFixed(6)}`);
+            lines.push(`antiParticle=${m.antiLocal ? "ON" : "OFF"} ; antiCPT=${m.antiCPT ? "ON" : "OFF"}`);
+            lines.push(`PHYS_SAMPLES_PER_UNIT_SCAN=${m.PHYS_SAMPLES_PER_UNIT_SCAN}`);
+            lines.push("");
+
+            function section(title, list) {
+                lines.push(title);
+                lines.push(`  ${varName.padEnd(8)} err%       mass(MeV)      γ_eff       γ_d2       γ_d3_phys     γ_d3`);
+                lines.push("-------------------------------------------------------------------------------");
+                const top = Math.min(50, list.length);
+                for (let i = 0; i < top; i++) {
+                    const b = list[i];
+                    const val = isR1 ? b.r1 : b.r3;
+                    const vs = val.toFixed(4).padStart(7);
+                    const es = b.errPct.toFixed(4).padStart(9);
+                    const ms = (Number.isFinite(b.massMeV) ? b.massMeV.toFixed(6) : "NaN").padStart(12);
+                    const ge = b.gammaEff.toFixed(6).padStart(10);
+                    const g2 = b.gamma_d2.toFixed(6).padStart(9);
+                    const g3p = b.gamma_d3_phys.toFixed(6).padStart(11);
+                    const g3 = b.gamma_d3.toFixed(6).padStart(9);
+                    lines.push(`  ${vs}  ${es}  ${ms}  ${ge}  ${g2}  ${g3p}  ${g3}`);
+                }
+                lines.push("");
+            }
+
+            section("Top minima (local minima, branch candidates):", scan.bestMinima || []);
+            section("Top points (global best, independent of locality):", scan.bestAll || []);
+
+            lines.push(`Model used in this scan (sweeping ${varName}):`);
+            if (isR1) lines.push(`  A2=1 ; A3=${m.r3} (fixed) ; A1=r1 (swept)`);
+            else lines.push(`  A2=1 ; A1=${m.r1} (fixed) ; A3=r3 (swept)`);
+
+            lines.push("  γ_d2, γ_d3 computed from loop geometry (streaming)");
+            el.scanBest.textContent = lines.join("\n");
+        }
+
+        let lastMapA = null;
+
+        function drawMapA(map) {
+            // map: [{ key, name, top: [{n,eN,eK,score,err,massMeV}, ...] }, ...]
+            const canvas = el.scanCanvas;
+            const { w, h, dpr } = resizeCanvasToCSS(canvas);
+            const ctx = getCanvas2D(canvas);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+            const style = getComputedStyle(document.body);
+            const bg = style.getPropertyValue('--scan-bg').trim();
+            const gridCol = style.getPropertyValue('--scan-grid').trim();
+            const axisCol = style.getPropertyValue('--scan-axis').trim();
+            const textCol = style.getPropertyValue('--scan-text').trim();
+
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, w, h);
+
+            const ml = 46, mr = 10, mt = 10, mb = 34;
+            const iw = Math.max(10, w - ml - mr);
+            const ih = Math.max(10, h - mt - mb);
+
+            // y = log10(n)
+            let yMin = 10, yMax = 0;
+            for (const row of map) {
+                for (const b of row.top) {
+                    const ly = Math.log10(Math.max(1, b.n));
+                    yMin = Math.min(yMin, ly);
+                    yMax = Math.max(yMax, ly);
+                }
+            }
+            if (!Number.isFinite(yMin) || !Number.isFinite(yMax) || yMax <= yMin) {
+                yMin = 0; yMax = 4;
+            }
+            yMin = Math.floor(yMin * 10) / 10;
+            yMax = Math.ceil(yMax * 10) / 10;
+
+            // grid
+            ctx.strokeStyle = gridCol;
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = mt + (ih * i) / 5;
+                ctx.beginPath(); ctx.moveTo(ml, y); ctx.lineTo(ml + iw, y); ctx.stroke();
+            }
+            for (let i = 0; i <= Math.max(1, map.length); i++) {
+                const x = ml + iw * (i / Math.max(1, map.length));
+                ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, mt + ih); ctx.stroke();
+            }
+
+            // axes
+            ctx.strokeStyle = axisCol;
+            ctx.beginPath();
+            ctx.moveTo(ml, mt);
+            ctx.lineTo(ml, mt + ih);
+            ctx.lineTo(ml + iw, mt + ih);
+            ctx.stroke();
+
+            // labels
+            ctx.fillStyle = textCol;
+            ctx.font = "11px ui-monospace, Menlo, Consolas, monospace";
+            ctx.fillText("log10(n)", 6, mt + 12);
+            ctx.fillText("entity", ml + iw - 38, mt + ih + 26);
+
+            // y ticks
+            ctx.globalAlpha = 0.75;
+            for (let i = 0; i <= 5; i++) {
+                const ly = yMax - (yMax - yMin) * (i / 5);
+                const y = mt + (ih * i) / 5;
+                ctx.fillText(ly.toFixed(1), 6, y + 4);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // x labels (entity keys)
+            ctx.globalAlpha = 0.85;
+            for (let i = 0; i < map.length; i++) {
+                const x = ml + iw * ((i + 0.5) / map.length);
+                ctx.fillText(map[i].key, x - 6, mt + ih + 16);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // points: top candidates (size by rank, alpha by score)
+            for (let i = 0; i < map.length; i++) {
+                const row = map[i];
+                const x0 = ml + iw * ((i + 0.5) / map.length);
+
+                for (let r = 0; r < row.top.length; r++) {
+                    const b = row.top[r];
+                    const ly = Math.log10(Math.max(1, b.n));
+                    const y = mt + ih * (1 - (ly - yMin) / (yMax - yMin));
+
+                    const a = Math.max(0.15, Math.min(0.95, 1.0 - 3.0 * b.score)); // heuristic
+                    const rad = (r === 0) ? 4.0 : (r === 1) ? 3.2 : 2.6;
+
+                    ctx.fillStyle = `rgba(255,120,120,${a})`;
+                    ctx.beginPath();
+                    ctx.arc(x0, y, rad, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function renderMapAList(map) {
+            const lines = [];
+            lines.push("Map A (batch) — Top candidates per entity (ranked by score = sqrt(εN^2+εk^2))");
+            lines.push("Columns: key  n  score  εN  εk  mass(MeV)  err%");
+            lines.push("------------------------------------------------------");
+
+            for (const row of map) {
+                for (let i = 0; i < row.top.length; i++) {
+                    const b = row.top[i];
+                    const errPct = Number.isFinite(b.err) ? (b.err * 100) : NaN;
+
+                    lines.push(
+                        `${row.key.padEnd(3)}  ` +
+                        `${String(b.n).padStart(6)}  ` +
+                        `${b.score.toExponential(2).padStart(9)}  ` +
+                        `${b.eN.toExponential(2).padStart(9)}  ` +
+                        `${b.eK.toExponential(2).padStart(9)}  ` +
+                        `${b.massMeV.toFixed(3).padStart(10)}  ` +
+                        `${(Number.isFinite(errPct) ? errPct.toFixed(3) : "NaN").padStart(8)}`
+                    );
+                }
+                lines.push("");
+            }
+
+            lines.push("Tip: click any entity after the batch to inspect its full ε(n) curves.");
+            el.scanBest.textContent = lines.join("\n");
+        }
+
+        async function runMapA({ nMax = 10000, topK = 3, errMaxPct = 20.0 } = {}) {
+            // Save UI state
+            const prevEntity = el.entity.value;
+            const prevTitle = document.querySelector("#scanPanel .panelTitle")?.textContent || "";
+
+            setScanTitle(`Map A: batch scan (n=1…${nMax})`);
+            setScanLegend("εN", "εk", true);
+
+            const keys = Object.keys(PRESET); // e,mu,tau,u,c,t,d,s,b,p,n
+            const map = [];
+
+            for (let idx = 0; idx < keys.length; idx++) {
+                const k = keys[idx];
+
+                // switch entity
+                el.entity.value = k;
+                resetAutoOverrides();
+                updateAll();
+
+                // run scan for this entity
+                const scan = runScan(nMax);
+                if (!scan) continue;
+
+                // filter + pick topK
+                const list = (scan.best || [])
+                    .filter(b => Number.isFinite(b.err) ? (b.err * 100 <= errMaxPct) : true)
+                    .slice(0, 50);
+
+                const top = list.slice(0, topK).map(b => ({
+                    n: b.n, eN: b.eN, eK: b.eK, score: b.score,
+                    massMeV: b.massMeV, err: b.err
+                }));
+
+                map.push({ key: k, name: PRESET[k].name, top });
+
+                // yield to keep UI responsive
+                await new Promise(r => setTimeout(r, 0));
+            }
+
+            // restore entity
+            el.entity.value = prevEntity;
+            updateAll();
+
+            lastMapA = map;
+            renderMapAList(map);
+            drawMapA(map);
+
+            // restore scan title optional (or keep map title)
+            // setScanTitle(prevTitle);
+            return map;
+        }
+
+        // Draw whichever scan is stored in lastScanData
+        function drawLastScan() {
+            if (!lastScanData) return;
+            if (el.scanPanel && el.scanPanel.classList.contains("collapsed")) return;
+
+            if (lastScanData.type === "r3" || lastScanData.type === "r1") {
+                drawScanChartR3(lastScanData); // Use same drawer for r1/r3
+            } else {
+                drawScanChart(lastScanData); // existing n-scan chart
+            }
+        }
+
+        // =============================================================
+        // 8. EVENTS MANAGEMENT
+        // =============================================================
+        el.btnCalibLock.addEventListener("click", () => {
+            el.entity.value = "e";
+            el.harmN.value = "1";
+            el.etaMode.value = "calib_me";
+            el.lockEta.checked = true;
+            etaLockedValue = null;
+            resetAutoOverrides();
+            updateAll();
+        });
+
+        el.btnFitN.addEventListener("click", () => {
+            if (!last) return;
+            const fitStr = (el.fitMeV.value || "").trim();
+            const targetMeV = fitStr ? parseFloat(fitStr) : targetMeVForEntity(el.entity.value);
+            if (!Number.isFinite(targetMeV) || targetMeV <= 0) return;
+            const thetaUsed = el.coreMode.checked
+                ? parseFloat(el.thetaStruct.value)
+                : CONSTANTS.THETA_STRUCT;
+
+            const cosTheta = Math.cos(thetaUsed);
+
+            const mTargetKg = targetMeV * CONSTANTS.KG_PER_MEV;
+            const n_req = (mTargetKg * last.eta * last.Phi_obj * cosTheta) / (CONSTANTS.M_PLANCK * Math.max(1e-12, last.gammaEff));
+            el.harmN.value = String(Math.max(1, Math.round(n_req)));
+            updateAll();
+        });
+
+        el.btnResetView.addEventListener("click", () => {
+            camera.position.set(12, 12, 18);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        el.btnScanSpectrum.addEventListener("click", () => {
+            updateAll();
+            if (!last) { alert("Calibrate first!"); return; }
+
+            const scanBtn = document.querySelector('.collapseBtn[data-target="scanPanel"]');
+            if (el.scanPanel.classList.contains("collapsed")) togglePanel("scanPanel", scanBtn);
+
+            // 1. Get theoretical target from generative law
+            const spec = getSpec();
+            const n_theo = getGenerativeTarget(spec);
+
+            // 2. Define Scan Window (+/- 5% or fixed width for leptons)
+            const width = Math.max(100, Math.floor(n_theo * 0.05));
+            const nMin = Math.max(1, Math.floor(n_theo - width));
+            const nMax = Math.ceil(n_theo + width);
+
+            // 3. Run Scan
+            const scan = runScanWindow(nMin, nMax, n_theo);
+            lastScanData = scan;
+
+            // 4. Report
+            const bestSnap = scan.best[0];
+            const devPct = ((bestSnap.n / n_theo) - 1) * 100;
+            const signStr = devPct > 0 ? "+" : "";
+
+            const lines = [];
+            lines.push(`Target & Snap Analysis for [${spec.name}]:\n`);
+            lines.push(`Generative Law (Θ): Target n ≈ ${n_theo.toFixed(4)}`);
+            lines.push(`Scan Window: [${nMin}, ${nMax}]`);
+            lines.push(`--------------------------------------------------`);
+            lines.push(`Best Candidate (Snap): n = ${bestSnap.n}`);
+            lines.push(`Resonance Score: ${bestSnap.score.toExponential(6)}`);
+            lines.push(`Law Deviation: ${signStr}${devPct.toFixed(3)}%`);
+            lines.push(`Predicted Mass: ${bestSnap.massMeV.toFixed(4)} MeV`);
+
+            el.scanBest.textContent = lines.join("\n");
+
+            // Draw
+            drawScanChart(scan);
+        });
+
+
+        el.btnScanR3.addEventListener("click", () => {
+            if (!last) { alert("Calibrate first!"); return; }
+
+            const scanBtn = document.querySelector('.collapseBtn[data-target="scanPanel"]');
+            if (el.scanPanel.classList.contains("collapsed")) togglePanel("scanPanel", scanBtn);
+
+            // Labels for r3-scan (single series by default)
+            setScanTitle("Scan: err(mass) vs r3 (0 → 8)");
+            setScanLegend("err", "(off)", false);
+
+            const scan = runScanR3(0.0, 8.0, 0.005);
+            lastScanData = scan;
+
+            drawLastScan();
+            renderBestListR3(scan);
+        });
+
+        el.btnScanR1.addEventListener("click", () => {
+            if (!last) { alert("Calibrate first!"); return; }
+
+            const scanBtn = document.querySelector('.collapseBtn[data-target="scanPanel"]');
+            if (el.scanPanel.classList.contains("collapsed")) togglePanel("scanPanel", scanBtn);
+
+            // Labels for r1-scan
+            setScanTitle("Scan: err(mass) vs r1 (0.2 → 8)");
+            setScanLegend("err", "(off)", false);
+
+            const scan = runScanR1(0.2, 8.0, 0.005);
+            lastScanData = scan;
+
+            drawLastScan();
+            renderBestListR3(scan); // Re-uses the list renderer, smart enough to detect type 'r1'
+        });
+
+        el.btnMapA.addEventListener("click", async () => {
+            await runMapA({ nMax: 10000, topK: 3, errMaxPct: 20.0 });
+        });
+
+        el.lockEta.addEventListener("change", () => {
+            etaLockedValue = null; // On vide la mémoire
+            updateAll();           // On relance le cycle (qui va re-verrouiller la valeur actuelle)
+        });
+        el.entity.addEventListener("change", () => {
+            resetAutoOverrides();
+
+            // FIX : On vide la cible manuelle pour forcer le rechargement de la masse PDG ---
+            el.fitMeV.value = "";
+            // -----------------------------------------------------------------------------------
+
+            const k = el.entity.value;
+            // Only force preset n0 if NOT in Core Mode (Core calculates it)
+            if (!el.coreMode.checked && (k === "e" || k === "mu" || k === "tau")) {
+                const n0 = PRESET[k]?.n0 ?? 1;
+                el.harmN.value = String(n0);
+            }
+            if (k !== "custom") {
+                if (k === "e" || k === "mu" || k === "tau") {
+                    el.r3.value = "0.0"; el.wd3.value = "0.0"; el.wch.value = "0.0"; el.confMode.value = "off";
+                }
+                if (k === "u" || k === "c" || k === "t" || k === "d" || k === "s" || k === "b") {
+                    if (parseFloat(el.r3.value) === 0) el.r3.value = "1.0";
+                    if (parseFloat(el.wd3.value) === 0) el.wd3.value = "0.5";
+                    el.confMode.value = "off"; el.wch.value = "0.0";
+                }
+                if (k === "p" || k === "n") {
+                    if (parseFloat(el.r3.value) === 0) el.r3.value = "1.2";
+                    if (parseFloat(el.wd3.value) === 0) el.wd3.value = "0.5";
+                    if (parseFloat(el.wch.value) === 0) el.wch.value = "0.5";
+                    el.confMode.value = "y";
+                }
+            }
+            updateAll();
+        });
+
+        el.autoSector.addEventListener("change", () => {
+            resetAutoOverrides();
+            updateAll();
+        });
+
+        el.coreMode.addEventListener("change", () => {
+            updateAll();
+        });
+
+        el.thetaStruct.addEventListener("input", () => {
+            if (el.coreMode.checked) updateAll();
+        });
+
+        [el.etaMode, el.lockEta, el.etaVal, el.NloopE, el.harmN, el.visPts, el.visMax, el.spacing, el.confMode, el.triSlices, el.wch, el.showLine, el.showPts, el.r1, el.r3, el.tilt34, el.wd3, el.fitMeV, el.cd2, el.cd13, el.cQ, el.cfam, el.cMeV]
+            .forEach(inp => inp.addEventListener("input", () => {
+                if (inp === el.etaMode) {
+                    if (lastEtaMode === "fix_Ne") {
+                        const v = Number.parseFloat(el.NloopE.value);
+                        if (Number.isFinite(v)) legacyNloopEUser = v;
+                    }
+                    if (el.etaMode.value === "fix_Ne") {
+                        if (Number.isFinite(legacyNloopEUser)) el.NloopE.value = legacyNloopEUser.toExponential(6);
+                    }
+                    lastEtaMode = el.etaMode.value;
+                    if (el.etaMode.value !== "calib_me") etaLockedValue = null;
+                }
+                if (inp === el.NloopE && el.etaMode.value === "fix_Ne") {
+                    const v = Number.parseFloat(el.NloopE.value);
+                    if (Number.isFinite(v)) legacyNloopEUser = v;
+                }
+                updateAll();
+            }));
+
+        [el.antiCPT, el.antiParticle].forEach(inp => {
+            if (!inp) return;
+            inp.addEventListener("input", () => updateAll());
+            inp.addEventListener("change", () => updateAll());
+        });
+
+        [el.showEpsN, el.showEpsK].forEach(chk => {
+            if (!chk) return;
+            chk.addEventListener("change", () => {
+                if (lastScanData && !el.scanPanel.classList.contains("collapsed")) {
+                    drawLastScan();
+                }
+            });
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        addEventListener("resize", () => {
+            camera.aspect = innerWidth / innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(innerWidth, innerHeight);
+            positionLeftPanels();
+            window.addEventListener("resize", positionLeftPanels);
+
+            if (lastScanData && !el.scanPanel.classList.contains("collapsed"))
+                drawLastScan();
+        });
+
+        updateAll();
+        animate();
+        requestAnimationFrame(() => {
+            positionLeftPanels();
+            drawScanChart({ nMax: 10000, epsN: new Float64Array(10001), epsK: new Float64Array(10001), yMax: 0.5, best: [] });
+        });
+    </script>
+</body>
+
+</html>
