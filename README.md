@@ -44,7 +44,7 @@ Where $N$ is the number of coherent steps (loop length) and $k$ is the winding n
 
 ## Installation & Usage
 
-Simply download the `index.html` file and open it in any modern web browser (Chrome, Firefox, Edge, Safari).
+Simply clic this link [https://michael-vaillant.github.io/mcp-baryons-poc/] or download the `index.html` file and open it in any modern web browser (Chrome, Firefox, Edge, Safari).
 No server or build process is required.
 
 ```bash
